@@ -39,3 +39,6 @@ playwright/.cache/
 
 # Local data
 *.local
+
+# Agent tooling / skills (not app source)
+.agents/
