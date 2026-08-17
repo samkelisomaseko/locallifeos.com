@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "category": "foundation",
+    "description": "Project builds with Vite and serves identically to the original single file (no visual change)",
+    "steps": [
+      "Run npm run build",
+      "Run npm run serve and open localhost:4173",
+      "Compare rendered UI to previous behavior across desktop and mobile"
+    ],
+    "passes": true,
+    "priority": "critical",
+    "assigned_workstream": "foundation",
+    "verification_method": "automatic_baselines"
+  },
+  {
+    "id": 2,
+    "category": "foundation",
+    "description": "OpenWeather key is server-side only; browser fetches through /api/weather proxy",
+    "steps": [
+      "Grep dist/ and index.html for the key — must be absent",
+      "Call /api/weather?lat=-26.3&lon=31.2 and confirm live weather response",
+      "Confirm dev proxy works via npm run dev"
+    ],
+    "passes": true,
+    "priority": "critical",
+    "assigned_workstream": "foundation",
+    "verification_method": "manual_test"
+  },
+  {
+    "id": 3,
+    "category": "foundation",
+    "description": "Google Maps key is removed from hardcoded source and injected from env at build time",
+    "steps": [
+      "Grep index.html for the old key — must be absent",
+      "Confirm %VITE_GOOGLE_MAPS_API_KEY% resolves in dist/",
+      "Confirm maps load with a real key in .env"
+    ],
+    "passes": true,
+    "priority": "critical",
+    "assigned_workstream": "foundation",
+    "verification_method": "manual_test"
+  },
+  {
+    "id": 4,
+    "category": "foundation",
+    "description": "Screenshot baselines exist for all screens on desktop and mobile",
+    "steps": [
+      "Run npx playwright test",
+      "Verify 14 baselines exist in tests/baselines/",
+      "Baselines match current UI (login + 6 app screens x 2 viewports)"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "foundation",
+    "verification_method": "automatic_baselines"
+  },
+  {
+    "id": 5,
+    "category": "foundation",
+    "description": "Lint and typecheck gates pass and are wired to npm scripts",
+    "steps": [
+      "Run npm run lint — exit 0",
+      "Run npm run typecheck — exit 0",
+      "Run npm test — all green"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "foundation",
+    "verification_method": "ci_script"
+  }
+]

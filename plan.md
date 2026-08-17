@@ -169,17 +169,17 @@ Each phase has a **Goal**, **Tasks**, **Acceptance Criteria**, and exits to the 
 
 **Tasks**
 1. ✅ **Sidebar fix** — desktop nav now renders on the **left** (CSS only: flipped flex `order`, `border-right`, FAB position). *(Done.)*
-2. `git init` + proper `.gitignore` (never commit `*.env`), initial commit of the current app.
-3. Add `package.json` + **Vite** with the existing `index.html` as entry. **Zero visual changes** — build output must render identically.
-4. **Move hardcoded keys to env** (`OPENWEATHER_API_KEY`, Google Maps key) and add **server-side proxy endpoints** so the browser still works but never receives keys.
-5. Create **screenshot baselines** (Playwright): one per screen × desktop/mobile. These are the pixel-lock for every future phase.
-6. Add basic lint + `tsc` (via JSDoc checkJs on core files) so the repo stops being untyped.
-7. Write a **README** + `AGENTS.md`-style `dev`/`build`/`test`/`lint` commands.
+2. ✅ `git init` + `.gitignore` (never commit `*.env`), initial commit of the current app. *(Done.)*
+3. ✅ `package.json` + **Vite** with the existing `index.html` as entry. **Zero visual changes** — build output renders identically. *(Done.)*
+4. ✅ **Move hardcoded keys to env** — OpenWeather key now **server-side only** via `/api/weather` proxy (Vite dev middleware + `server/serve.mjs`); Google Maps key via `VITE_GOOGLE_MAPS_API_KEY` (referrer-restricted client key, injected at build time). *(Done.)*
+5. ✅ **Screenshot baselines** (Playwright): 14 screenshots (login + 6 app screens × desktop/mobile) in `tests/baselines/`. These are the pixel-lock for every future phase. *(Done.)*
+6. ✅ Basic lint + `tsc` (ESLint + `tsc --noEmit`) wired to npm scripts. *(Done.)*
+7. ✅ **README** + `dev`/`build`/`test`/`lint` commands. *(Done.)*
 
 **Acceptance criteria**
-- `npm run build && npm run dev` runs the exact same UI (verified by baseline screenshots).
-- No API keys remain in any committed client file.
-- `npm run lint` and `npm run typecheck` pass (or are explicitly scoped for legacy code).
+- ✅ `npm run build && npm run serve` runs the exact same UI (verified by baseline screenshots).
+- ✅ No API keys remain in any committed client file.
+- ✅ `npm run lint`, `npm run typecheck`, and `npm run test` all pass.
 
 ---
 
