@@ -1,0 +1,25 @@
+{
+  "name": "locallifeos",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "LocalLife OS — a hyperlocal community OS. Keep 100% of the current UI & UX.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "node --env-file-if-exists=.env server/serve.mjs",
+    "lint": "eslint server vite.config.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "playwright": "^1.49.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  }
+}
