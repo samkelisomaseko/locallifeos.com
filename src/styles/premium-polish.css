@@ -1,0 +1,64 @@
+/* ===== LocalLife OS 15 — Pro Alignment & Premium Polish ===== */
+:root{
+  --accent-strong: color-mix(in srgb, var(--primary-accent) 45%, #0000);
+}
+/* Light mode crispness */
+@media (prefers-color-scheme: light){
+  :root{
+    --bg-color:#F7F8FA;
+    --card-bg:#FFFFFF;
+    --text-primary:#0E1116;
+    --text-secondary:#3E4959;
+    --border-color:#E5E9F0;
+  }
+}
+/* Card upgrades */
+.card{
+  border: 1px solid var(--border-color, rgba(255,255,255,.08));
+  box-shadow: 0 1px 2px rgba(0,0,0,.02), 0 8px 24px rgba(0,0,0,.06);
+  border-radius: 18px;
+}
+.card-title{ letter-spacing:.2px; }
+.card-subtitle{ opacity:.9; }
+
+/* Toggle rows: align label left, switch right */
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; }
+.toggle-row .toggle-switch{ margin-left:auto; }
+
+/* Context menu: stays in viewport */
+.ctx-menu{ position:fixed; min-width:180px; background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.18); z-index:4000; overflow:hidden; }
+.ctx-menu button{ display:flex; align-items:center; gap:.5rem; width:100%; padding:.6rem .8rem; background:none; border:0; text-align:left; font-weight:600; }
+.ctx-menu button:hover{ background:var(--ai-suggestion-bg, rgba(0,0,0,.05)); }
+.ctx-menu .danger{ color:#C0392B; }
+
+/* Sheet modal (bottom sheet) */
+.modal-sheet{ position:fixed; inset:0; background:rgba(13,14,15,.45); display:flex; align-items:flex-end; z-index:3000; }
+.modal-sheet .sheet{ background:var(--card-bg); width:100%; max-height:72vh; border-radius:16px 16px 0 0; padding:1rem; overflow:auto; border:1px solid var(--border-color); }
+.table-like{ width:100%; border-collapse:collapse; }
+.table-like th, .table-like td{ border-bottom:1px solid var(--border-color); padding:.5rem .25rem; text-align:left; }
+.table-like th{ font-weight:700; }
+.tag{ font-size:.75rem; padding:.15rem .6rem; border-radius:999px; background:var(--ai-suggestion-bg); border:1px solid var(--accent-strong); }
+
+/* Chat bubble premium look */
+.chat-bubble{ border-radius:16px; padding:.6rem .8rem; box-shadow:0 6px 24px rgba(0,0,0,.08); }
+.chat-bubble .chip{ display:inline-flex; align-items:center; gap:.4rem; border:1px dashed var(--border-color); padding:.28rem .55rem; border-radius:20px; font-size:.82rem; margin-top:.35rem; cursor:pointer; }
+.chat-bubble .chip:hover{ background:var(--ai-suggestion-bg); }
+
+/* Bulletin responsiveness */
+.bulletin-card{ display:flex; flex-direction:column; gap:.4rem; border:1px solid var(--border-color); border-radius:14px; padding:.8rem; background:var(--card-bg); }
+.bulletin-grid{ display:grid; grid-template-columns:1fr; gap:.8rem; }
+@media (min-width:560px){ .bulletin-grid{ grid-template-columns:1fr 1fr; } }
+@media (min-width:900px){ .bulletin-grid{ grid-template-columns:1fr 1fr 1fr; } }
+
+/* Receipt modal look */
+#receiptModal .modal-content{ border-radius:16px; background:var(--card-bg); border:1px solid var(--border-color); }
+.receipt{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.receipt header{ display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--border-color); padding-bottom:.6rem; margin-bottom:.6rem; }
+.receipt .items{ width:100%; border-collapse:collapse; }
+.receipt .items th, .receipt .items td{ border-bottom:1px dashed var(--border-color); padding:.4rem .2rem; }
+.receipt .totals{ text-align:right; margin-top:.6rem; }
+.receipt .branding{ opacity:.8; font-size:.85rem; }
+
+/* Privacy sandbox visual cue */
+body.privacy-sandbox .sensitive{ filter: blur(5px); }
+body.privacy-sandbox .export-actions button{ opacity:.5; pointer-events:none; }

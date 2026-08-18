@@ -4,7 +4,9 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const DIST_DIR = join(__dirname, '..', 'dist');
+const DIST_DIR = process.env.DIST_DIR
+  ? join(process.cwd(), process.env.DIST_DIR)
+  : join(__dirname, '..', 'dist');
 const PORT = Number(process.env.PORT) || 4173;
 
 const MIME = {

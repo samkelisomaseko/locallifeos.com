@@ -1,27 +1,32 @@
-## Last Updated: 2026-08-17
-## Session: 1 of estimated 60
-## Trace ID: phase0-foundation
+## Last Updated: 2026-08-18
+## Session: 2 of estimated 60
+## Trace ID: phase1-css-extraction
 
 ### Completed
-- Feature 0.1: Sidebar fixed to render on the left (desktop) — CSS-only, UI/UX preserved
-- Feature 0.2: Git repo initialized; .gitignore (secrets, dist, node_modules, .agents)
-- Feature 0.3: Vite build scaffolded — single index.html builds identically (no visual change)
-- Feature 0.4: Secrets moved out of the client
-  - OpenWeather key → server-side /api/weather proxy (dev via Vite middleware, prod via server/serve.mjs)
-  - Google Maps key → env (VITE_GOOGLE_MAPS_API_KEY), referrer-restricted client key
-- Feature 0.5: Lint (ESLint) + typecheck (tsc) wired to npm scripts; both pass
-- Feature 0.6: Playwright screenshot baselines — 14 screenshots (7 screens × desktop/mobile) in tests/baselines/
-- Feature 0.7: README + unit smoke suite (node --test); all gates green
+- Phase 1 (partial): CSS extracted from index.html into src/styles/*
+  - 5 stylesheets sliced byte-exact: tokens-base.css, receipt-more.css, premium-polish.css, ai-super-style.css, premium-xl.css
+  - src/styles/index.css aggregates them via @import in original cascade order
+  - index.html: 5 <style> blocks -> single <link rel="stylesheet"> (L15); 12,023 -> 10,834 lines; build passes (dist/index.html 634.34 kB + index-CZ9Z7zsj.css 103.95 kB)
+- A/B pixel-diff regression gate built:
+  - vite.old.config.mjs rebuilds old HEAD (git worktree) into dist-old/
+  - server/serve.mjs honors DIST_DIR env override (backwards-compatible)
+  - tests/ab-diff.spec.mjs: 7 screens, pixelmatch threshold 0.1, animations/transitions disabled for determinism
+  - playwright.ab.mjs: webServers on 4181 (old) + 4182 (new)
+  - Result: 7/7 pixel-identical (0 mismatched pixels). Earlier flaky failures were animation timing, not CSS regressions.
+- pngjs + pixelmatch added as devDependencies
+- Temp artifacts cleaned up (.tmp-old worktree, dist-old/, logs, stray servers)
 
 ### In Progress
-- (none)
+- Phase 1: Main JS script extraction (L2602-9206, ~6600 lines) into src/modules/ with curated window bridge for 315 inline handlers
 
 ### Blocked
 - (none)
 
 ### Known Issues
-- Google Maps key still reaches the browser (by design — Maps JS is a referrer-restricted client key, not a server secret). Full Maps proxying not feasible/standard; noted in README.
+- Google Maps key still reaches the browser (by design — referrer-restricted client key; see README)
+- tests/e2e/baseline.spec.mjs only writes baselines, never compares; A/B spec is the real pixel gate
 
 ### Next Up
-- Phase 1: Modularize the 12k-line single file without visual change (biggest refactor, zero UX risk)
+- Phase 1: extract main JS script + secondary JS blocks (L9207-12021) into src/modules/
+- Phase 1: JSDoc boundaries, unit tests, smoke e2e, full gate suite + commit
 - Phase 2: Real backend (Fastify) + Postgres/Drizzle auth + Admin Panel foundation

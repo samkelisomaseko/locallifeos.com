@@ -1,0 +1,122 @@
+/* Viewport-safe context menu */
+.ll-ctx {
+  position: fixed; z-index: 999999; min-width: 200px; max-width: 80vw;
+  background: var(--popover-bg, rgba(20,20,22,.98)); color: var(--popover-fg, #fff);
+  border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  padding: 6px; backdrop-filter: blur(10px);
+  -webkit-tap-highlight-color: transparent;
+}
+.ll-ctx button {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  border: 0; background: transparent; color: inherit; font: inherit;
+  padding: 12px 14px; border-radius: 10px; cursor: pointer;
+}
+.ll-ctx button:hover, .ll-ctx button:focus { background: rgba(255,255,255,.08); outline: none; }
+.ll-ctx button.danger { color: #ff7575; }
+.ll-ctx hr { border: 0; height: 1px; background: rgba(255,255,255,.1); margin: 6px 0; }
+.ll-ctx .k { margin-left: auto; opacity: .6; font-size: 12px; }
+
+/* Chat bubbles (AI + channels parity) */
+.ai-chat .bubble {
+  max-width: min(680px, 95vw);
+  padding: 12px 16px; border-radius: 18px; line-height: 1.5;
+  box-shadow: 0 8px 28px rgba(0,0,0,.08);
+}
+.ai-chat .bubble.ai {
+  background: var(--ai-bubble, #0b1324); color: #e9eefc; border-top-left-radius: 6px;
+}
+.ai-chat .bubble.user {
+  background: var(--user-bubble, #1f2937); color: #f7fafc; border-top-right-radius: 6px;
+}
+.ai-chat .actions .btn {
+  border-radius: 14px; padding: 10px 14px; font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+}
+/* Receipt styling */
+.receipt {
+  background: #fff; color: #111; max-width: 420px; margin: 12px auto; padding: 24px;
+  border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.12); font-family: ui-sans-serif, system-ui;
+}
+.receipt header { text-align:center; font-weight:800; font-size: 18px; margin-bottom: 10px; }
+.receipt .meta { font-size: 12px; opacity: .7; display:flex; justify-content:space-between; }
+.receipt table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+.receipt th, .receipt td { padding: 8px 0; border-bottom: 1px dashed #ddd; }
+.receipt .total { font-weight: 800; font-size: 16px; text-align:right; }
+@media print {
+  body { background: #fff; }
+  .receipt { box-shadow: none; border: 1px solid #000; }
+}
+
+/* Bulletin card responsiveness */
+.bulletin-card { contain: content; }
+.bulletin-card img, .bulletin-card video { max-width: 100%; height: auto; border-radius: 12px; display:block; }
+
+/* Accessibility */
+:root {
+  --focus-ring: 0 0 0 3px rgba(99, 102, 241, .6);
+}
+*[tabindex], button, a, input, select, textarea { outline-offset: 2px; }
+:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 12px; }
+
+/* Privacy sheet */
+#privacySandboxRow { display:flex; align-items:center; justify-content:space-between; gap: 12px; padding: 12px; border-radius: 12px; background: var(--muted, rgba(255,255,255,.06)); }
+.switch {
+  width: 52px; height: 30px; background: #999; border-radius: 999px; position: relative; cursor: pointer;
+  transition: background .25s ease;
+}
+.switch::after {
+  content: ""; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 999px; background: #fff;
+  transition: transform .25s ease;
+}
+.switch.on { background: #22c55e; }
+.switch.on::after { transform: translateX(22px); }
+#exportSheet {
+  position: fixed; inset: 0; display:none; place-items: end center; z-index: 999998;
+  background: rgba(0,0,0,.45); backdrop-filter: blur(3px);
+}
+#exportSheet .panel {
+  width: min(560px, 96vw); background: var(--panel, #0b1324); color: #fff; border-radius: 16px 16px 0 0;
+  padding: 16px; box-shadow: 0 -20px 40px rgba(0,0,0,.35);
+}
+#exportSheet .panel h3 { margin: 6px 6px 10px; }
+#exportSheet .panel .row { display:flex; gap: 10px; flex-wrap: wrap; }
+#exportSheet .panel .row .btn {
+  flex: 1 1 160px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 12px; text-align:center; cursor:pointer;
+}
+#exportSheet .panel .row .btn:hover { background: rgba(255,255,255,.06); }
+
+/* Progress ring */
+.progress-ring {
+  --p: 0deg;
+  width: 72px; height: 72px; border-radius: 50%;
+  background: conic-gradient(var(--accent, #6366f1) var(--p), rgba(255,255,255,.12) 0);
+  display: grid; place-items: center; color: #fff; font-weight: 700;
+}
+.progress-ring span { background: rgba(0,0,0,.4); padding: 6px 8px; border-radius: 10px; font-size: 12px; }
+
+/* Buttons cohesion */
+button, .btn {
+  border-radius: 14px; padding: 10px 14px; font-weight: 600;
+}
+
+/* Smart filter chips */
+.filter-chip { padding: 8px 12px; border: 1px solid rgba(255,255,255,.15); border-radius: 999px; cursor:pointer; }
+.filter-chip.on { background: rgba(99,102,241,.25); border-color: rgba(99,102,241,.55); }
+
+/* === LocalAI: Inline memory panel + subtle animations (v16) === */
+#aiBottomSheet .memory-panel{margin-top:8px;border-top:1px dashed var(--placeholder-bg);padding-top:8px}
+#aiBottomSheet .memory-panel h4{font-size:.95rem;margin:6px 0 8px 0}
+#aiBottomSheet .memory-list{display:grid;gap:8px;max-height:160px;overflow:auto;padding-right:4px}
+#aiBottomSheet .memory-item{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;background:var(--card-bg);border:1px solid var(--placeholder-bg);border-radius:12px;padding:8px;animation:fadeIn .25s ease-out}
+#aiBottomSheet .memory-item .why{display:block;font-size:.75rem;opacity:.7;margin-top:4px}
+#aiBottomSheet .memory-item button{font-size:.7rem;padding:4px 8px}
+#aiBottomSheet .memory-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+#aiBottomSheet .chip{font-size:.72rem;border:1px solid var(--placeholder-bg);padding:4px 8px;border-radius:999px;background:color-mix(in srgb, var(--primary-accent) 8%, transparent)}
+#aiBottomSheet .mem-controls{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.ai-sparkle{animation:sparkle .9s ease-out both}
+@keyframes sparkle{0%{transform:scale(.9);filter:brightness(1.2)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+.ai-fab.has-suggestion{box-shadow:0 0 0 8px color-mix(in srgb, var(--primary-accent) 14%, transparent)}
+/* Dashboard mood summary */
+#aiDashboardInsight .mood-mini{font-size:.8rem;opacity:.8}
+/* Proactive alert emphasis */
+#dynamicIslandAlert .why{display:block;font-size:.75rem;opacity:.75;margin-top:4px}

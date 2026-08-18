@@ -1,0 +1,6 @@
+/* LocalLife OS — aggregated styles. Import order = cascade order (matches original single-file order). */
+@import './tokens-base.css';
+@import './receipt-more.css';
+@import './premium-polish.css';
+@import './ai-super-style.css';
+@import './premium-xl.css';
