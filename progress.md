@@ -6,12 +6,18 @@
 - Phase 1 (partial): CSS extracted from index.html into src/styles/* (commit 71489be)
   - 5 stylesheets sliced byte-exact; src/styles/index.css aggregates via @import in original cascade order
   - A/B pixel-diff gate: 7/7 pixel-identical at commit time
-- Phase 1 (partial): Main JS script extracted to public/modules/app-core.js
-  - Original inline main script (index.html L1539-8141, 6603 lines, 397,071 bytes) extracted byte-exact (verified exact match: true)
-  - Lives in public/ NOT src/ because Vite refuses classic <script src> without type="module"; public/ copies as-is, preserving parse timing + global scope (315 inline handlers depend on globals)
-  - index.html: 10,834 -> 4,230 lines; main script replaced by <script src="/modules/app-core.js"></script>
-  - Remaining inline scripts: L1539 (Pro Aligned Enhancements), L2424, L2568, L2723, L3736 (#ai-super-core); head scripts L12 crypto-js, L13 html2canvas, L14 Google Maps (async defer)
-  - Build passes: dist/index.html 237.29 kB + CSS; dist/modules/app-core.js copied byte-exact (397,071 bytes)
+- Phase 1: Main JS extracted and split into 20 feature modules (public/modules/)
+  - Step 1: original inline main script (index.html L1539-8141, 6603 lines, 397,071 bytes) extracted byte-exact to app-core.js (commit 5398632); lives in public/ because Vite refuses classic <script src> without type="module"
+  - Step 2: app-core.js split into 20 feature modules at verified-safe boundaries:
+    state, native-bridge, data, utils, dashboard, planner, explore, community,
+    ai-assistant, wellness, settings-deals, storage, auth-app, productivity,
+    lifestyle, gamification, applets, voice-share, map-services, services-emergency
+    - Boundary safety proven by static analysis: zero depth-0 statements reference any function/variable declared later (hoisting/TDZ safe across scripts)
+    - Concatenation of all 20 modules == original file byte-for-byte
+    - Note: duplicate top-level function declarations in source (openCreateHabitModal etc.) are legal classic-script semantics (last wins); node --check must run with .cjs extension or ESM autodetection falsely rejects them
+    - index.html now loads the 20 scripts in original order at the former app-core.js position
+    - A/B gate result: 7/7 pixel-identical vs HEAD build
+- Remaining inline scripts in index.html: L1558 (Pro Aligned Enhancements), L2443, L2587, L2742, L3755 (#ai-super-core); head scripts L12 crypto-js, L13 html2canvas, L14 Google Maps (async defer); file now 4,249 lines
 - A/B verification of JS extraction:
   - Comparison isolates the change: dist-old = CSS-extracted/JS-inline (HEAD 71489be) vs dist = CSS-extracted/JS-external
   - Full-suite runs: run1 6/7 (explore failed 2.86%), run2 6/7 (planner failed 1.01%) — different screens fail per run
@@ -21,7 +27,7 @@
 - (nothing — ready for next phase step)
 
 ### Blocked
-- A/B full-suite has residual flakiness under low RAM (~1.2 GB free of 8 GB): chromium.launch works but newPage()/page loads intermittently stall under memory pressure; failures move between screens and pass in isolation. Gate is trustworthy on a machine with more free memory.
+- A/B full-suite has residual flakiness under low RAM (~1.2 GB free of 8 GB): chromium.launch works but newPage()/page loads intermittently stall under memory pressure; failures move between screens and pass in isolation. This session's module-split run was clean: 7/7 in 2.4m.
 
 ### Known Issues
 - Google Maps key still reaches the browser (by design — referrer-restricted client key; see README)
@@ -30,9 +36,8 @@
 - PowerShell 5.1 Start-Process lacks -Environment; npx must be invoked via cmd /c
 
 ### Next Up
-- Phase 1: split app-core.js into feature modules (user chose "Split into modules by feature") as classic scripts in original order, A/B-verifying each step
-- Phase 1: extract secondary JS blocks (L1539, L2424, L2568, L2723, L3736) the same way
-- Phase 1: JSDoc boundaries, unit tests, smoke e2e, full gate suite + commit
+- Phase 1: extract remaining inline JS blocks (L1558, L2443, L2587, L2742, L3755) into public/modules/ the same way
+- Phase 1: JSDoc boundaries, unit tests, smoke e2e, full gate suite + final Phase 1 commit
 - Phase 2: Real backend (Fastify) + Postgres/Drizzle auth + Admin Panel foundation (Dual-Track: backend feature <=> Admin UI always together)
 
 ### How to rebuild A/B baseline (after cleanup)
