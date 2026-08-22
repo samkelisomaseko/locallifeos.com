@@ -68,5 +68,19 @@
     "priority": "high",
     "assigned_workstream": "foundation",
     "verification_method": "ci_script"
+  },
+  {
+    "id": 6,
+    "category": "foundation",
+    "description": "Phase 1 complete: index.html fully modularized (CSS via src/styles, all JS in public/modules/*), zero inline scripts; repaired modules execute cleanly with unit+smoke gates",
+    "steps": [
+      "npm run build succeeds; dist/index.html has no <script> blocks without src",
+      "node --test: 20/20 pass (AIUtil, AIMemory, AIEmotion, DB_PRO, db-pro globals)",
+      "npx playwright test --config playwright.smoke.mjs: 6/6 screens, no runtime errors, all module globals defined"
+    ],
+    "passes": true,
+    "priority": "critical",
+    "assigned_workstream": "foundation",
+    "verification_method": "automatic_baselines"
   }
 ]

@@ -1,3 +1,11 @@
+/**
+ * @module wellness
+ * Wellness screen: meditations, mood check-ins, water intake.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: deleteHabit, incrementWater, logMood, openJournalModal, saveJournalEntry, selectMood, showAIWellnessSummaryModal, toggleHabitProgress.
+ */
     const habitListContainerEl = document.getElementById('habitListContainer');
     const moodHabitTimelineEl = document.getElementById('moodHabitTimeline');
     const aiWellnessInsightEl = document.getElementById('aiWellnessInsight');

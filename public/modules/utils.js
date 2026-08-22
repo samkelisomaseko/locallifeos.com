@@ -1,3 +1,12 @@
+/**
+ * @module utils
+ * Shared UI utilities: modal Escape handling, icon/color pickers, input clear buttons.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: none assigned explicitly; top-level function/var declarations become
+ * browser globals consumed by inline handler attributes.
+ */
     document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && currentOpenModalId) closeModal(currentOpenModalId); });
     function trackUserAction(action) {
         lastUserAction = action;

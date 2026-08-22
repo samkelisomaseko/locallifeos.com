@@ -1,3 +1,12 @@
+/**
+ * @module storage
+ * localStorage-backed persistence helpers used across modules.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: none assigned explicitly; top-level function/var declarations become
+ * browser globals consumed by inline handler attributes.
+ */
     function saveTasksToLocalStorage() { localStorage.setItem('localLifeTasks', JSON.stringify(tasks)); }
     function loadTasksFromLocalStorage() {
         const storedTasks = localStorage.getItem('localLifeTasks');

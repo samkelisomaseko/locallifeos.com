@@ -1,3 +1,12 @@
+/**
+ * @module lifestyle
+ * Lifestyle applets UI logic.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: none assigned explicitly; top-level function/var declarations become
+ * browser globals consumed by inline handler attributes.
+ */
     const focusQuotes = [
         '"The secret of getting ahead is getting started." - Mark Twain',
         '"Concentrate all your thoughts upon the work at hand. The sun\'s rays do not burn until brought to a focus." - Alexander Graham Bell',

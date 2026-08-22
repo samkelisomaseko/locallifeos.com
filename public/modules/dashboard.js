@@ -1,3 +1,11 @@
+/**
+ * @module dashboard
+ * Dashboard screen rendering: greeting, pinned widgets, daily overview.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: navigateToExploreDeals.
+ */
     function getSkeletonTaskItem() {
         return `
             <div class="skeleton-list-item">

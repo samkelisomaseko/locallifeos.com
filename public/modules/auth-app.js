@@ -1,3 +1,12 @@
+/**
+ * @module auth-app
+ * Authentication flow: login/signup validation, session, profile.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: none assigned explicitly; top-level function/var declarations become
+ * browser globals consumed by inline handler attributes.
+ */
     const loginScreen = document.getElementById('loginScreen');
     const signupScreen = document.getElementById('signupScreen');
     function showLoginScreen() {

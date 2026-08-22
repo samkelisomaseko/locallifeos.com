@@ -1,3 +1,11 @@
+/**
+ * @module community
+ * Community bulletin board: posts, likes, replies.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: deleteMessage, editMessage, replyToMessage, showChannelDetailModal, showOtherUserProfile, toggleFavoriteChannel, toggleJoinChannel.
+ */
     const communityChannelListEl = document.getElementById('communityChannelList');
     const typingIndicatorArea = document.getElementById('typingIndicatorArea');
     const mockUserSuggestionPopup = document.getElementById('mockUserSuggestionPopup');

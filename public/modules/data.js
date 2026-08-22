@@ -1,3 +1,12 @@
+/**
+ * @module data
+ * Seed/demo datasets for app content (places, deals, meditations).
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: none assigned explicitly; top-level function/var declarations become
+ * browser globals consumed by inline handler attributes.
+ */
     let tasks = [
         { id: 1, title: "Submit ERS Tax Returns", time: "Before 5 PM", category: "work", completed: false, notes: "Ensure all income sources are declared.", dueDate: "2024-07-26", recurrence: "none", aiParsedDetails: { project: "Tax Returns", entity: "ERS"}, createdBy: 'system' },
         { id: 2, title: "Morning walk at Mlilwane Sanctuary", time: "7:00 AM - 8:00 AM", category: "health", completed: true, notes: "Look for zebras near the camp.", dueDate: new Date().toISOString().split('T')[0], recurrence: "daily", aiParsedDetails: {location: "Mlilwane"}, createdBy: 'system' },

@@ -1,8 +1,24 @@
 ﻿## Last Updated: 2026-08-22
-## Session: 5 of estimated 60
+## Session: 6 of estimated 60
 ## Trace ID: phase1-js-extraction
 
-### Completed (new this session)
+### Completed (new this session — PHASE 1 WRAP-UP)
+- Unit tests for pure helpers: tests/unit/ai-modules.test.mjs + tests/unit/db-pro.test.mjs
+  - Harness: tests/unit/helpers/load-classic.mjs loads classic browser scripts into a vm context where
+    window === sandbox (window.X assignments become bare globals) with localStorage/document/navigator/
+    MutationObserver stubs; sandbox.evaluate() reaches top-level const bindings (not visible as window props)
+  - Coverage: AIUtil (clamp/humanTime/uid/safeJSON incl. corrupted-storage fallback), AIMemory
+    (addTask persistence/toggleTask/forget), AIEmotion.analyze lexicon+heuristics+clamp,
+    DB_PRO put/get/getAll/upsert/del + locallife-db namespace persistence, db-pro window exports
+  - RESULT: 20/20 pass. Gotcha documented: 'amazing' is not in the emotion lexicon ('awesome' is).
+- JSDoc boundary headers added to ALL 25 modules in public/modules/: @module name, one-line purpose,
+  classic-script note, and detected window exports (11 modules use classic function/var globals for inline
+  handlers instead of explicit window assignment — wording reflects that). One-off codemod cleaned up.
+- Verification: syntax-check all 25 OK; lint/typecheck/tests(20)/build green; smoke re-run 6/6 (1.3m) —
+  comment-only change confirmed behavior-neutral.
+- feature_list.json: added Phase 1 completion entry (#6).
+
+### Completed
 - REPAIRED the 3 dead modules (user approved "repair") — all now parse AND execute:
   - ctx-menu.js: ternary missing `:` branch at old L48 -> converted to if-guard; fixed closer L91 `})();` -> `});`
   - db-pro.js: raw newline inside CSV string at old L210 -> restored `.join("\n")` escape
@@ -73,8 +89,8 @@ Byte-exact extraction preserves current behavior exactly (dead stays dead; both 
 - node --check on classic browser scripts needs a .cjs copy (Node ESM autodetection rejects legal duplicate function declarations)
 
 ### Next Up
-- Phase 1 wrap-up: JSDoc boundaries, unit tests for pure helpers, smoke e2e, full gate suite + final Phase 1 commit
-- Phase 2: Real backend (Fastify) + Postgres/Drizzle auth + Admin Panel foundation (Dual-Track: backend feature <=> Admin UI always together)
+- Phase 2: Real backend (Fastify) + Postgres/Drizzle auth + Admin Panel foundation
+  (Dual-Track: backend feature <=> Admin UI always together)
 
 ### How to rebuild A/B baseline (after cleanup)
 - git worktree add .tmp-old HEAD~N (the commit before your changes)

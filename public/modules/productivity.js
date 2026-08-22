@@ -1,3 +1,11 @@
+/**
+ * @module productivity
+ * Productivity applets (timers, trackers) UI logic.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: clearAllNotifications, markAllNotificationsRead, showNotificationsPanel, showPulseDetailModal.
+ */
     const notificationListContainer = document.getElementById('notificationListContainer');
     const unreadNotificationBadge = document.getElementById('unreadNotificationBadge');
     function updateUnreadNotificationBadge() {

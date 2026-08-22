@@ -1,3 +1,11 @@
+/**
+ * @module ai-assistant
+ * AI assistant bottom sheet UI wiring and chat interactions.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: sendAIChatMessage, toggleAIChat, updateAIChatTypingSuggestion.
+ */
     function aiSuggestChannelToJoin() {
         if (mockChannels.length > 2) {
             const potentialChannels = mockChannels.filter(ch => !ch.isJoined && ch.type !== 'announcements' && ch.id !== currentChatChannelId);

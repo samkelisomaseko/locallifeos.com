@@ -1,3 +1,11 @@
+/**
+ * @module user-context
+ * Current-user context (persistable profile snapshot).
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: currentUser, showCtxMenu.
+ */
 (function(){
   // current user (persistable)
   try {

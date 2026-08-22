@@ -1,3 +1,11 @@
+/**
+ * @module explore
+ * Explore screen: search, category filters and discovery cards.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: filterPlaces, ratePlace, submitPlaceReview, toggleSavePlace.
+ */
     const placesListEl = document.getElementById('placesList');
     function renderPlaces(filter = 'all') { 
         if (!placesListEl) { return; }

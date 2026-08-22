@@ -1,3 +1,11 @@
+/**
+ * @module services-emergency
+ * Services & emergency screen; hosts nested applet logic (siSwati tutor, ride finder).
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: addItineraryToPlanner, checkRideInputs, handleAnswer, setupSiswatiTutor.
+ */
     function checkRideInputs() {
         const pickup = document.getElementById('ride-pickup').value.trim();
         const destination = document.getElementById('ride-destination').value.trim();

@@ -1,3 +1,11 @@
+/**
+ * @module planner
+ * Planner screen: tasks, habits, focus sessions and their persistence.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: applyAISchedule, deleteTask, toggleTaskStatus.
+ */
     const taskListEl = document.getElementById('taskList');
     const newTaskInputEl = document.getElementById('newTaskInput');
     const taskCategories = ["personal", "work", "errands", "learning", "health", "general"];

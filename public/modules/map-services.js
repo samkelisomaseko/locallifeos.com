@@ -1,3 +1,11 @@
+/**
+ * @module map-services
+ * Map screen: Google Maps init/layers, rideshare finder, expense splitter, app-lock.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: initMap.
+ */
     function updateLiveLocationInfo() {
         native.geolocation.getCurrent(
             position => {

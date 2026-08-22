@@ -1,3 +1,12 @@
+/**
+ * @module gamification
+ * XP/points/streaks system feeding dashboard badges.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: none assigned explicitly; top-level function/var declarations become
+ * browser globals consumed by inline handler attributes.
+ */
     function showDynamicIslandAlert(icon, text, duration = 4000) {
         if (!dynamicIsland) return;
         clearTimeout(dynamicIslandTimeout);

@@ -1,3 +1,11 @@
+/**
+ * @module ctx-menu
+ * Viewport-safe context menu builder, bulletin long-press wiring, CSV export helper.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: exportCSV, openConfirmationModal, showCtxMenu.
+ */
 // Robust context menu builder (ensures menu stays inside viewport)
 window.showCtxMenu = function(items, clientX = window.innerWidth/2, clientY = window.innerHeight/2){
   // remove existing

@@ -1,3 +1,13 @@
+/**
+ * @module ai-super-core
+ * On-device super-assistant core: AIUtil, local AIMemory store, suggestions engine,
+ * emotion analysis, automation ticks and boot sequence.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: none assigned explicitly; top-level function/var declarations become
+ * browser globals consumed by inline handler attributes.
+ */
 /* =====================================================
    LocalLife OS — Super-Intelligent Personal Assistant
    All logic runs locally, inline, single-file.

@@ -1,3 +1,11 @@
+/**
+ * @module enhancements
+ * UX enhancement layer: service-worker registration, toggle styling, misc polish.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: DBX_PRO, DB_PRO.
+ */
 // ===== LocalLife OS 15 — Pro Aligned Enhancements =====
 (function(){
   const LS = localStorage;

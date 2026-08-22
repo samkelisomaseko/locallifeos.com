@@ -1,3 +1,11 @@
+/**
+ * @module settings-deals
+ * Settings screen and local deals listing.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: redeemDealStep, toggleAILearningPref.
+ */
     const darkModeToggleContainer = document.getElementById('darkModeToggleContainer');
     const darkModeToggleVisual = document.getElementById('darkModeToggleVisual');
     const aiPersonalitySelect = document.getElementById('aiPersonalitySelect');

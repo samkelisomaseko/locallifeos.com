@@ -1,3 +1,12 @@
+/**
+ * @module native-bridge
+ * Bridge to native/mobile capabilities (geolocation, vibration, haptics).
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: none assigned explicitly; top-level function/var declarations become
+ * browser globals consumed by inline handler attributes.
+ */
     const native = {
         geolocation: {
             getCurrent: (success, error) => {

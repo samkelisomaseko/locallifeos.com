@@ -1,3 +1,12 @@
+/**
+ * @module db-pro
+ * Lightweight DB (IndexedDB with localStorage fallback), toast fallback, context menu,
+ * and the LocalAI namespaces: AIMemory, AISuggestions, AIEmotion, AIAutomation.
+ *
+ * Loaded as a classic script (global scope preserved for inline handlers);
+ * load order is defined by index.html.
+ * Exports on window: AIAutomation, AIEmotion, AIMemory, AISuggestions, DB_PRO, LocalAI, sendAIChatMessage, showCtxMenu, toast.
+ */
 (function(){
   // ---------- Lightweight DB (falls back to localStorage) ----------
   const DB_PRO = window.DB_PRO || (function(){
