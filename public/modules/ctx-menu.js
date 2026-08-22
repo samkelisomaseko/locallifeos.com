@@ -45,7 +45,7 @@ window.showCtxMenu = function(items, clientX = window.innerWidth/2, clientY = wi
 // Wire long-press for bulletin posts to show edit/delete and ensure edit/delete work with DB_PRO if available
 (function wireBulletinLongPress(){
   const container = document.querySelector('#placesList, .bulletin-list, #bulletinList, .bulletin-posts') || document.body;
-  container.querySelectorAll ? container.querySelectorAll('.bulletin-post-card, .card.bulletin-post-card, article.bulletin-post-card').forEach(card=>{
+  if(container.querySelectorAll) container.querySelectorAll('.bulletin-post-card, .card.bulletin-post-card, article.bulletin-post-card').forEach(card=>{
     let t=null;
     card.addEventListener('pointerdown', (e)=>{
       t = setTimeout(()=>{
@@ -88,7 +88,7 @@ window.showCtxMenu = function(items, clientX = window.innerWidth/2, clientY = wi
       }, 450);
     });
     ['pointerup','pointerleave','pointercancel'].forEach(ev=> card.addEventListener(ev, ()=> clearTimeout(t)));
-  })();
+  });
 })();
 
 // Ensure toggle switches align right and look native

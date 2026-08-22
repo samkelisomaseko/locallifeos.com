@@ -4,6 +4,7 @@
         const findButton = document.getElementById('findRideButton');
         findButton.disabled = !(pickup && destination);
     }
+    window.checkRideInputs = checkRideInputs;
 
     function openAiItineraryModal() {
         if (!userSubscriptionTier.startsWith('pro')) {
@@ -286,6 +287,7 @@
 
         renderQuestion();
     }
+    window.setupSiswatiTutor = setupSiswatiTutor;
     function findRide() {
         const pickup = document.getElementById('ride-pickup').value;
         const dest = document.getElementById('ride-destination').value;

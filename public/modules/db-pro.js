@@ -207,8 +207,7 @@
             const list = Array.isArray(arr)?arr:Object.entries(arr);
             list.forEach((v,i)=> rows.push([k, (v && v.id)||(i+1), JSON.stringify(v)]));
           }
-          const csv = rows.map(r=> r.map(x=> `"${String(x).replace(/"/g,'""')}"`).join(",")).join("
-");
+          const csv = rows.map(r=> r.map(x=> `"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
           const blob = new Blob([csv], {type: "text/csv"});
           const url = URL.createObjectURL(blob); const a = Object.assign(document.createElement("a"), { href:url, download:"locallife-export.csv" }); a.click(); URL.revokeObjectURL(url);
         }

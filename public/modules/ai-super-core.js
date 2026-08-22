@@ -278,14 +278,14 @@ const AIAutomation = (()=>{
     routines.forEach(r=>{
       const tile = document.createElement('div');
       tile.className = 'pinned-widget-item automation-tile';
-      tile.innerHTML = \`
+      tile.innerHTML = `
         <div class="widget-icon"><i class="fa-solid fa-robot"></i></div>
         <div class="widget-title title">\${r.name}</div>
         <div class="widget-value desc">\${r.type==='time' ? 'Runs at '+r.time : 'Location-based'}</div>
         <div class="automation-toggle" style="margin-top:6px">
           <input type="checkbox" \${r.enabled?'checked':''} aria-label="Enable \${r.name}"/>
           <span>\${r.enabled?'On':'Off'}</span>
-        </div>\`;
+        </div>`;
       const chk = tile.querySelector('input');
       chk.addEventListener('change', ()=>{
         AIMemory.updateRoutine(r.id, {enabled: chk.checked});
@@ -313,12 +313,12 @@ function enhanceBottomSheet(){
   if(!content.querySelector('.ai-memory-panel')){
     const panel = document.createElement('div');
     panel.className = 'ai-memory-panel';
-    panel.innerHTML = \`
+    panel.innerHTML = `
       <div class="screen-header" style="position:sticky; top:0; background:transparent;">
         <div class="title-group"><div class="title">Your private memory</div></div>
       </div>
       <div class="memory-list"></div>
-    \`;
+    `;
     content.appendChild(panel);
   }
   renderMemoryList();
@@ -332,11 +332,11 @@ function renderMemoryList(){
   mem.tasks.forEach(t=> rows.push({type:'Task', id:t.id, title:t.title, meta: t.due?('Due '+AIUtil.humanTime(t.due)):'', entity:'tasks'}));
   mem.places.forEach(p=> rows.push({type:'Place', id:p.id, title:p.name, meta: p.coords?JSON.stringify(p.coords):'', entity:'places'}));
   mem.chats.slice(-10).reverse().forEach(c=> rows.push({type:'Chat', id:c.id, title:c.text.slice(0,80), meta: AIUtil.humanTime(c.ts)+' • mood '+c.mood.label, entity:'chats'}));
-  listEl.innerHTML = rows.map(r=> \`
+  listEl.innerHTML = rows.map(r=> `
     <div class="memory-row">
       <div><strong>\${r.type}</strong><br/>\${r.title}<div class="meta">\${r.meta}</div></div>
       <button class="forget-btn" data-entity="\${r.entity}" data-id="\${r.id}"><i class="fa-solid fa-trash-can"></i> Forget</button>
-    </div>\`
+    </div>`
   ).join('') || '<div class="memory-row">No stored data yet.</div>';
   listEl.querySelectorAll('.forget-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -363,7 +363,7 @@ function hookChat(){
     // user bubble
     const userWrap = document.createElement('div');
     userWrap.className = 'chat-message-wrapper user';
-    userWrap.innerHTML = \`<div class="chat-bubble" style="background: var(--chat-bubble-user-bg); color:#fff">\${text}</div>\`;
+    userWrap.innerHTML = `<div class="chat-bubble" style="background: var(--chat-bubble-user-bg); color:#fff">${text}</div>`;
     messagesArea.appendChild(userWrap);
     // AI bubble
     const reply = mood.mood==='negative'
@@ -373,7 +373,7 @@ function hookChat(){
         : 'Got it. I can line up your priorities or add this to your plan.';
     const aiWrap = document.createElement('div');
     aiWrap.className = 'chat-message-wrapper other';
-    aiWrap.innerHTML = \`<div class="chat-bubble">\${reply}<div class="ai-explainer">Mood: \${mood.label}. Responses adapt to your tone, locally.</div></div>\`;
+    aiWrap.innerHTML = `<div class="chat-bubble">${reply}<div class="ai-explainer">Mood: ${mood.label}. Responses adapt to your tone, locally.</div></div>`;
     messagesArea.appendChild(aiWrap);
     messagesArea.scrollTop = messagesArea.scrollHeight;
     AISuggestions.updateDashboardInsights();
@@ -449,43 +449,3 @@ if (document.readyState === 'loading') {
   LL_AIBoot();
 }
 
-  try{
-    // Initial demo data only if completely empty (no tasks/places)
-    const mem = AIMemory.all();
-    if((mem.tasks||[]).length===0){
-      AIMemory.addTask({title:'Buy groceries', due:new Date(Date.now()+60*60*1000).toISOString(), category:'errands'});
-      AIMemory.addTask({title:'30‑min workout', due:new Date(Date.now()+3*60*60*1000).toISOString(), category:'health'});
-      AIMemory.addPlace({name:'Central Park', coords:{lat:-26.305, lng:31.136}});
-    }
-
-    AISuggestions.updateDashboardInsights();
-    AISuggestions.updatePlannerSuggestions();
-    AISuggestions.updateExplore();
-    AIAutomation.boot();
-    enhanceBottomSheet();
-    hookChat();
-
-    // Make .ai-fab open the AI bottom sheet if not already wired
-    const fab = AIUtil.el('.ai-fab');
-    const sheet = AIUtil.el('#aiBottomSheet');
-    if(fab && sheet){
-      fab.addEventListener('click', ()=>{
-        sheet.classList.add('active');
-        setTimeout(()=>{
-          enhanceBottomSheet();
-        }, 50);
-      });
-    }
-
-    // Mood trend hint on dashboard, if there is a container to show
-    const insight = AIUtil.el('#aiDashboardInsight');
-    if(insight){
-      const hint = document.createElement('div');
-      hint.className = 'ai-fade-in';
-      hint.innerHTML = '<i class="fa-solid fa-heart-pulse"></i> '+AIEmotion.summarizeTrend();
-      insight.appendChild(hint);
-    }
-  }catch(e){
-    console.error('AI boot error', e);
-  }
-});

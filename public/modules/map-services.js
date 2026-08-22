@@ -66,7 +66,7 @@
         native.geolocation.getCurrent(
             position => {
                 pickupInput.value = `Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`;
-                checkRideInputs();
+                if (window.checkRideInputs) window.checkRideInputs();
             },
             () => { showToast("Could not get location.", "error"); }
         );
@@ -380,13 +380,13 @@
         }
     });
 
-    document.getElementById('applet-siswatiTutor-modal').addEventListener('show', setupSiswatiTutor);
+    document.getElementById('applet-siswatiTutor-modal').addEventListener('show', () => { if (window.setupSiswatiTutor) window.setupSiswatiTutor(); });
     document.getElementById('applet-groupExpenseSplitter-modal').addEventListener('show', () => {
         document.getElementById('split-result').innerHTML = '';
         document.getElementById('expense-participant-list').innerHTML = `<input type="text" class="input-field mb-1" placeholder="Participant 1">`;
         document.getElementById('expense-form').reset();
     });
     document.querySelectorAll('#applet-localRideshare-modal input').forEach(input => {
-        input.addEventListener('input', checkRideInputs);
+        input.addEventListener('input', () => { if (window.checkRideInputs) window.checkRideInputs(); });
     });
 
