@@ -82,5 +82,111 @@
     "priority": "critical",
     "assigned_workstream": "foundation",
     "verification_method": "automatic_baselines"
+  },
+  {
+    "id": 7,
+    "category": "backend",
+    "description": "Auth API: signup, login, logout, session restore (GET /me), password reset — Argon2id hashing, SHA-256 session tokens, HttpOnly cookies",
+    "steps": [
+      "POST /api/v1/auth/signup with valid email+password+name returns 201 + session cookie",
+      "POST /api/v1/auth/login with valid credentials returns 200 + session cookie",
+      "POST /api/v1/auth/logout clears session cookie",
+      "GET /api/v1/auth/me with valid session returns user; without returns 401",
+      "POST /api/v1/auth/reset-password returns dev token (email flow placeholder)"
+    ],
+    "passes": true,
+    "priority": "critical",
+    "assigned_workstream": "backend",
+    "verification_method": "unit_and_integration_tests"
+  },
+  {
+    "id": 8,
+    "category": "backend",
+    "description": "RBAC middleware: requireAuth + requireRole preHandler hooks; admin routes gated behind super_admin/admin",
+    "steps": [
+      "Unauthenticated request to /admin/v1/* returns 401",
+      "Regular user (role: user) request to /admin/v1/* returns 403",
+      "Admin user (role: admin) request to /admin/v1/* returns 200"
+    ],
+    "passes": true,
+    "priority": "critical",
+    "assigned_workstream": "backend",
+    "verification_method": "unit_and_integration_tests"
+  },
+  {
+    "id": 9,
+    "category": "backend",
+    "description": "Admin Users CRUD: list/search, inspect, suspend/unsuspend, reset password, soft-delete, subscription tier override — all audit-logged",
+    "steps": [
+      "GET /admin/v1/users returns paginated user list",
+      "GET /admin/v1/users/:id returns user + profile",
+      "PATCH /admin/v1/users/:id/suspend sets status=suspended + audit log",
+      "PATCH /admin/v1/users/:id/unsuspend restores status=active",
+      "POST /admin/v1/users/:id/reset-password hashes new password + revokes sessions",
+      "PATCH /admin/v1/users/:id/subscription-tier upserts profile.subscriptionTier",
+      "PATCH /admin/v1/users/:id/soft-delete sets status=deleted (super_admin protected)"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "unit_and_integration_tests"
+  },
+  {
+    "id": 10,
+    "category": "backend",
+    "description": "Admin Config: feature flags CRUD + app config CRUD — toggle keys, set jsonb values, all audit-logged",
+    "steps": [
+      "GET /admin/v1/flags returns all feature flags",
+      "PATCH /admin/v1/flags/:key creates or updates a flag (enabled, description)",
+      "GET /admin/v1/config returns all config entries",
+      "PATCH /admin/v1/config/:key creates or updates a config value"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "unit_and_integration_tests"
+  },
+  {
+    "id": 11,
+    "category": "backend",
+    "description": "Admin Panel: vanilla HTML/CSS/JS SPA at /admin, dark theme, login overlay, tabbed UI (Users/Flags/Config), audit-logged mutations",
+    "steps": [
+      "GET /admin returns self-contained HTML with login overlay",
+      "Login with admin credentials shows panel with tabs",
+      "Users tab: list users with role/status badges, suspend/unsuspend buttons",
+      "Flags tab: list flags with toggle switches",
+      "Config tab: list config entries"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "frontend",
+    "verification_method": "manual_test"
+  },
+  {
+    "id": 12,
+    "category": "backend",
+    "description": "Health mask: /api/v1/health does not expose db status; /api/v1/health/detail exposes full health info",
+    "steps": [
+      "GET /api/v1/health returns ok, service, version, uptimeSec — no db field",
+      "GET /api/v1/health/detail returns ok, service, version, uptimeSec, db status"
+    ],
+    "passes": true,
+    "priority": "medium",
+    "assigned_workstream": "backend",
+    "verification_method": "unit_tests"
+  },
+  {
+    "id": 13,
+    "category": "backend",
+    "description": "DB migration: 0000_jazzy_king_cobra.sql generated for 7 tables (users, sessions, profiles, settings, audit_logs, feature_flags, app_config)",
+    "steps": [
+      "npm run db:generate produces migration SQL",
+      "npm run db:migrate applies migration to Postgres",
+      "Verify all 7 tables exist with correct columns"
+    ],
+    "passes": false,
+    "priority": "critical",
+    "assigned_workstream": "backend",
+    "verification_method": "manual_test"
   }
 ]

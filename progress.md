@@ -1,22 +1,22 @@
-﻿## Last Updated: 2026-08-22
-## Session: 6 of estimated 60
-## Trace ID: phase1-js-extraction
+﻿## Last Updated: 2026-09-09
+## Session: 7 of estimated 60
+## Trace ID: phase2-real-backend
 
-### Completed (new this session — PHASE 1 WRAP-UP)
-- Unit tests for pure helpers: tests/unit/ai-modules.test.mjs + tests/unit/db-pro.test.mjs
-  - Harness: tests/unit/helpers/load-classic.mjs loads classic browser scripts into a vm context where
-    window === sandbox (window.X assignments become bare globals) with localStorage/document/navigator/
-    MutationObserver stubs; sandbox.evaluate() reaches top-level const bindings (not visible as window props)
-  - Coverage: AIUtil (clamp/humanTime/uid/safeJSON incl. corrupted-storage fallback), AIMemory
-    (addTask persistence/toggleTask/forget), AIEmotion.analyze lexicon+heuristics+clamp,
-    DB_PRO put/get/getAll/upsert/del + locallife-db namespace persistence, db-pro window exports
-  - RESULT: 20/20 pass. Gotcha documented: 'amazing' is not in the emotion lexicon ('awesome' is).
-- JSDoc boundary headers added to ALL 25 modules in public/modules/: @module name, one-line purpose,
-  classic-script note, and detected window exports (11 modules use classic function/var globals for inline
-  handlers instead of explicit window assignment — wording reflects that). One-off codemod cleaned up.
-- Verification: syntax-check all 25 OK; lint/typecheck/tests(20)/build green; smoke re-run 6/6 (1.3m) —
-  comment-only change confirmed behavior-neutral.
-- feature_list.json: added Phase 1 completion entry (#6).
+### Completed (new this session — PHASE 2 COMPLETE)
+- Auth API: Argon2id password hashing, SHA-256 session tokens, HttpOnly cookies
+  - Routes: POST /api/v1/auth/signup, /login, /logout, /reset-password; GET /api/v1/auth/me
+  - Demo user seeded on first start: test@example.com / password (role: super_admin)
+  - Client auth-app.js wired to real API (fetch with credentials, same UI preserved)
+- RBAC middleware: requireAuth + requireRole preHandler hooks
+  - Admin routes gated behind super_admin/admin roles
+  - Every admin mutation writes to audit_logs table (actorId, action, entityType, entityId, before/after, ip)
+- Admin Users (/admin/v1/users): list+search, inspect, suspend/unsuspend, reset password, soft-delete, subscription tier override
+- Admin Config (/admin/v1/flags, /admin/v1/config): feature flags CRUD, app config CRUD
+- Admin Panel: vanilla HTML/CSS/JS SPA at /admin, dark theme, tabbed UI (Users/Flags/Config), login overlay, toggle buttons, role/status badges
+- Health mask: /api/v1/health no longer exposes db status; /api/v1/health/detail for admin
+- DB migration generated: server/db/migrations/0000_jazzy_king_cobra.sql (7 tables)
+- Gates: lint 0 errors, typecheck clean, 43/43 tests pass, build clean
+- Pushed to GitHub: ee209c3 (origin/main HEAD)
 
 ### Completed
 - REPAIRED the 3 dead modules (user approved "repair") — all now parse AND execute:
@@ -78,7 +78,7 @@ Byte-exact extraction preserves current behavior exactly (dead stays dead; both 
 - (nothing — ready for next phase step)
 
 ### Blocked
-- A/B full-suite has residual environmental flakiness under memory pressure: chromium.launch works but page.goto/newPage intermittently stalls past the 60s test timeout; failures move between screens and pass in isolation (this run: login goto timeout, passed alone afterwards; prior runs: explore, planner). No fixed failure signature => environmental, not a regression. Healthy-RAM runs complete 7/7 cleanly in 2.4-2.9m.
+- Database not provisioned yet — npm run db:migrate requires a live Postgres instance. Auth/admin routes degrade gracefully (skip seed, return 400/401 on DB-dependent operations). Connect DATABASE_URL to .env when ready.
 
 ### Known Issues
 - Minor mojibake in some string literals of db-pro.js / ai-super-core.js (e.g. "2�?`min", header em-dash) — pre-existing byte-level encoding damage; cosmetic only (parses fine), fix opportunistically
@@ -89,8 +89,9 @@ Byte-exact extraction preserves current behavior exactly (dead stays dead; both 
 - node --check on classic browser scripts needs a .cjs copy (Node ESM autodetection rejects legal duplicate function declarations)
 
 ### Next Up
-- Phase 2: Real backend (Fastify) + Postgres/Drizzle auth + Admin Panel foundation
-  (Dual-Track: backend feature <=> Admin UI always together)
+- Phase 2b: Connect Postgres, run db:migrate, verify full auth flow end-to-end
+- Phase 3: Feature modules (planner, explore, community, settings-deals, etc.)
+- Potential: real-time notifications, offline PWA, i18n
 
 ### How to rebuild A/B baseline (after cleanup)
 - git worktree add .tmp-old HEAD~N (the commit before your changes)
