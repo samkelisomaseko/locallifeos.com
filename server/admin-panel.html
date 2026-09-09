@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalLife OS — Admin Panel</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #38bdf8; }
+    h2 { font-size: 1.1rem; margin: 1.5rem 0 0.75rem; color: #94a3b8; border-bottom: 1px solid #334155; padding-bottom: 0.5rem; }
+    .card { background: #1e293b; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #334155; }
+    th { color: #94a3b8; font-weight: 600; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-green { background: #065f46; color: #6ee7b7; }
+    .badge-yellow { background: #713f12; color: #fde68a; }
+    .badge-red { background: #7f1d1d; color: #fca5a5; }
+    .badge-blue { background: #1e3a5f; color: #93c5fd; }
+    .badge-gray { background: #374151; color: #d1d5db; }
+    button { cursor: pointer; border: none; border-radius: 0.375rem; padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 500; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-ghost { background: transparent; color: #94a3b8; border: 1px solid #475569; }
+    .btn-ghost:hover { background: #334155; }
+    .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .tab { padding: 0.5rem 1rem; border-radius: 0.375rem; background: #334155; color: #94a3b8; cursor: pointer; font-size: 0.875rem; }
+    .tab.active { background: #2563eb; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .toast { position: fixed; bottom: 1rem; right: 1rem; background: #065f46; color: #6ee7b7; padding: 0.75rem 1.25rem; border-radius: 0.5rem; display: none; z-index: 100; }
+    .toast.show { display: block; }
+    #login-overlay { position: fixed; inset: 0; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 200; }
+    #login-overlay.hidden { display: none; }
+    .login-box { background: #1e293b; padding: 2rem; border-radius: 0.75rem; width: 320px; }
+    .login-box input { width: 100%; padding: 0.5rem; margin-bottom: 0.75rem; border: 1px solid #475569; border-radius: 0.375rem; background: #0f172a; color: #e2e8f0; font-size: 0.875rem; }
+    .login-box button { width: 100%; }
+    .login-box .error { color: #fca5a5; font-size: 0.8rem; margin-bottom: 0.5rem; min-height: 1rem; }
+    .flag-toggle { width: 36px; height: 20px; border-radius: 10px; border: none; cursor: pointer; position: relative; transition: background 0.2s; }
+    .flag-toggle.on { background: #16a34a; }
+    .flag-toggle.off { background: #475569; }
+    .flag-toggle::after { content: ''; position: absolute; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: white; transition: left 0.2s; }
+    .flag-toggle.on::after { left: 18px; }
+    .flag-toggle.off::after { left: 2px; }
+  </style>
+</head>
+<body>
+  <!-- Login overlay -->
+  <div id="login-overlay">
+    <div class="login-box">
+      <h2 style="margin-top:0">Admin Login</h2>
+      <input id="adm-email" type="email" placeholder="Email" autocomplete="username">
+      <input id="adm-password" type="password" placeholder="Password" autocomplete="current-password">
+      <div id="adm-error" class="error"></div>
+      <button class="btn-primary" id="adm-login-btn">Log in</button>
+    </div>
+  </div>
+
+  <!-- Main panel -->
+  <div class="container" id="panel" style="display:none">
+    <h1>LocalLife OS — Admin</h1>
+    <div class="tab-bar">
+      <div class="tab active" data-tab="users">Users</div>
+      <div class="tab" data-tab="flags">Feature Flags</div>
+      <div class="tab" data-tab="config">Config</div>
+    </div>
+
+    <!-- Users tab -->
+    <div class="tab-content active" id="tab-users">
+      <div class="card">
+        <table>
+          <thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Last login</th><th>Actions</th></tr></thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Flags tab -->
+    <div class="tab-content" id="tab-flags">
+      <div class="card">
+        <table>
+          <thead><tr><th>Key</th><th>Enabled</th><th>Description</th><th>Actions</th></tr></thead>
+          <tbody id="flags-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Config tab -->
+    <div class="tab-content" id="tab-config">
+      <div class="card">
+        <table>
+          <thead><tr><th>Key</th><th>Value</th><th>Description</th><th>Actions</th></tr></thead>
+          <tbody id="config-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // ── State ─────────────────────────────────────────────────────
+  const API = window.location.origin;
+  let _me = null;
+
+  // ── Helpers ───────────────────────────────────────────────────
+  async function api(path, opts = {}) {
+    const res = await fetch(`${API}${path}`, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.error ?? `${res.status}`);
+    return data;
+  }
+  function $(id) { return document.getElementById(id); }
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+  function h(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function badge(text, cls) { return `<span class="badge ${cls}">${h(text)}</span>`; }
+  function statusBadge(s) {
+    const map = { active: 'badge-green', suspended: 'badge-yellow', deleted: 'badge-red' };
+    return badge(s, map[s] || 'badge-gray');
+  }
+  function roleBadge(r) {
+    const map = { super_admin: 'badge-red', admin: 'badge-yellow', moderator: 'badge-blue', user: 'badge-gray' };
+    return badge(r, map[r] || 'badge-gray');
+  }
+
+  // ── Auth ──────────────────────────────────────────────────────
+  async function checkAuth() {
+    try {
+      _me = await api('/api/v1/auth/me');
+      if (!['super_admin', 'admin'].includes(_me.user.role)) throw new Error('Not admin');
+      $('login-overlay').classList.add('hidden');
+      $('panel').style.display = '';
+      loadUsers();
+    } catch {
+      $('login-overlay').classList.remove('hidden');
+      $('panel').style.display = 'none';
+    }
+  }
+
+  $('adm-login-btn').addEventListener('click', async () => {
+    const email = $('adm-email').value.trim();
+    const pw = $('adm-password').value;
+    $('adm-error').textContent = '';
+    try {
+      await api('/api/v1/auth/login', { method: 'POST', body: JSON.stringify({ email, password: pw }) });
+      await checkAuth();
+    } catch (e) { $('adm-error').textContent = e.message; }
+  });
+
+  // ── Tabs ──────────────────────────────────────────────────────
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      $(`tab-${tab.dataset.tab}`).classList.add('active');
+      if (tab.dataset.tab === 'users') loadUsers();
+      else if (tab.dataset.tab === 'flags') loadFlags();
+      else if (tab.dataset.tab === 'config') loadConfig();
+    });
+  });
+
+  // ── Users ─────────────────────────────────────────────────────
+  async function loadUsers() {
+    try {
+      const { users } = await api('/admin/v1/users');
+      $('users-body').innerHTML = users.map(u => `
+        <tr>
+          <td>${h(u.email)}</td>
+          <td>${roleBadge(u.role)}</td>
+          <td>${statusBadge(u.status)}</td>
+          <td style="font-size:0.75rem">${u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : '—'}</td>
+          <td class="actions">
+            ${u.status === 'active'
+              ? `<button class="btn-danger" onclick="suspendUser('${u.id}','${h(u.email)}')">Suspend</button>`
+              : u.status === 'suspended'
+                ? `<button class="btn-primary" onclick="unsuspendUser('${u.id}')">Unsuspend</button>`
+                : ''}
+          </td>
+        </tr>`).join('');
+    } catch (e) { $('users-body').innerHTML = `<tr><td colspan="5" style="color:#fca5a5">${h(e.message)}</td></tr>`; }
+  }
+
+  async function suspendUser(id, email) {
+    if (!confirm(`Suspend ${email}?`)) return;
+    await api(`/admin/v1/users/${id}/suspend`, { method: 'PATCH', body: JSON.stringify({ reason: 'Admin action' }) });
+    toast('User suspended');
+    loadUsers();
+  }
+
+  async function unsuspendUser(id) {
+    await api(`/admin/v1/users/${id}/unsuspend`, { method: 'PATCH' });
+    toast('User unsuspended');
+    loadUsers();
+  }
+
+  // ── Flags ─────────────────────────────────────────────────────
+  async function loadFlags() {
+    try {
+      const { flags } = await api('/admin/v1/flags');
+      $('flags-body').innerHTML = flags.length ? flags.map(f => `
+        <tr>
+          <td><code>${h(f.key)}</code></td>
+          <td><button class="flag-toggle ${f.enabled ? 'on' : 'off'}" onclick="toggleFlag('${h(f.key)}', ${!f.enabled})"></button></td>
+          <td style="font-size:0.8rem;color:#94a3b8">${h(f.description ?? '—')}</td>
+          <td></td>
+        </tr>`).join('') : '<tr><td colspan="4" style="color:#94a3b8">No feature flags yet.</td></tr>';
+    } catch (e) { $('flags-body').innerHTML = `<tr><td colspan="4" style="color:#fca5a5">${h(e.message)}</td></tr>`; }
+  }
+
+  async function toggleFlag(key, enabled) {
+    await api(`/admin/v1/flags/${encodeURIComponent(key)}`, { method: 'PATCH', body: JSON.stringify({ enabled }) });
+    toast(`Flag ${key} ${enabled ? 'enabled' : 'disabled'}`);
+    loadFlags();
+  }
+
+  // ── Config ────────────────────────────────────────────────────
+  async function loadConfig() {
+    try {
+      const { config } = await api('/admin/v1/config');
+      $('config-body').innerHTML = config.length ? config.map(c => `
+        <tr>
+          <td><code>${h(c.key)}</code></td>
+          <td style="font-size:0.8rem;max-width:200px;overflow:hidden;text-overflow:ellipsis">${h(typeof c.value === 'object' ? JSON.stringify(c.value) : String(c.value))}</td>
+          <td style="font-size:0.8rem;color:#94a3b8">${h(c.description ?? '—')}</td>
+          <td></td>
+        </tr>`).join('') : '<tr><td colspan="4" style="color:#94a3b8">No config entries yet.</td></tr>';
+    } catch (e) { $('config-body').innerHTML = `<tr><td colspan="4" style="color:#fca5a5">${h(e.message)}</td></tr>`; }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────
+  checkAuth();
+  </script>
+</body>
+</html>

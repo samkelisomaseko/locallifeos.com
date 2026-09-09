@@ -3,13 +3,35 @@ import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import cookie from '@fastify/cookie';
-import { pingDb } from './db/client.mjs';
+import { pingDb, getDb } from './db/client.mjs';
+import authPlugin from './plugins/auth.mjs';
+import adminUsersPlugin from './plugins/admin-users.mjs';
+import adminConfigPlugin from './plugins/admin-config.mjs';
+import adminPanelPlugin from './plugins/admin-panel.mjs';
+import { hashPassword } from './lib/crypto.mjs';
+import { eq } from 'drizzle-orm';
+import { users } from './db/schema.js';
 
 /**
- * Fastify app factory (Phase 2a scaffold).
- * Security defaults per plan.md §8: Helmet headers, locked-down CORS,
- * rate limiting, cookies for future session auth.
+ * Fastify app factory (Phase 2 — Real Backend).
+ * Registers auth, admin, and core plugins.
  */
+
+async function seedDemoUser() {
+  const db = getDb();
+  const email = 'test@example.com';
+  const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (rows.length) return;
+
+  const passwordHash = await hashPassword('password');
+  await db.insert(users).values({
+    email,
+    passwordHash,
+    role: 'super_admin',
+    status: 'active',
+  });
+  console.log(`[seed] Created demo user: ${email} / password (role: super_admin)`);
+}
 
 export async function buildApp(opts = {}) {
   const app = Fastify({
@@ -22,7 +44,8 @@ export async function buildApp(opts = {}) {
     ...opts.fastifyOpts,
   });
 
-  await app.register(helmet, { contentSecurityPolicy: false }); // API only; CSP stays with the web app
+  await app.register(helmet, { contentSecurityPolicy: false });
+  await app.register(cookie);
 
   const allowedOrigins = (process.env.APP_ORIGIN ?? 'http://localhost:5173,http://localhost:4173')
     .split(',')
@@ -38,19 +61,32 @@ export async function buildApp(opts = {}) {
     timeWindow: '1 minute',
   });
 
-  await app.register(cookie);
+  // ── Auth routes ────────────────────────────────────────────────
+  await app.register(authPlugin);
 
-  // ---- /api/v1 ----
+  // ── Admin routes (role-gated inside each plugin) ───────────────
+  await app.register(adminUsersPlugin);
+  await app.register(adminConfigPlugin);
+  await app.register(adminPanelPlugin);
+
+  // ── Health check ───────────────────────────────────────────────
   app.get('/api/v1/health', async () => {
     const db = await pingDb();
     return {
       ok: true,
       service: 'locallifeos-api',
-      version: '0.1.0',
+      version: '0.2.0',
       db: db.ok ? 'up' : `down: ${db.error}`,
       uptimeSec: Math.round(process.uptime()),
     };
   });
+
+  // ── Seed demo user on first start ──────────────────────────────
+  try {
+    await seedDemoUser();
+  } catch (err) {
+    app.log.warn({ err: err.message }, 'Demo user seed skipped (DB may be unavailable)');
+  }
 
   return app;
 }
