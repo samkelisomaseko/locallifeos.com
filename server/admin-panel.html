@@ -68,6 +68,7 @@
       <div class="tab active" data-tab="users">Users</div>
       <div class="tab" data-tab="flags">Feature Flags</div>
       <div class="tab" data-tab="config">Config</div>
+      <div class="tab" data-tab="metrics">Metrics</div>
     </div>
 
     <!-- Users tab -->
@@ -97,6 +98,18 @@
           <thead><tr><th>Key</th><th>Value</th><th>Description</th><th>Actions</th></tr></thead>
           <tbody id="config-body"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Metrics tab -->
+    <div class="tab-content" id="tab-metrics">
+      <div class="card">
+        <h3 style="margin-bottom:1rem;color:#94a3b8">Entity Counts</h3>
+        <div id="metrics-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem"></div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <h3 style="margin-bottom:0.5rem;color:#94a3b8">System Health</h3>
+        <div id="metrics-health" style="font-size:0.875rem;color:#e2e8f0"></div>
       </div>
     </div>
   </div>
@@ -162,6 +175,7 @@
       if (tab.dataset.tab === 'users') loadUsers();
       else if (tab.dataset.tab === 'flags') loadFlags();
       else if (tab.dataset.tab === 'config') loadConfig();
+      else if (tab.dataset.tab === 'metrics') loadMetrics();
     });
   });
 
@@ -231,6 +245,29 @@
           <td></td>
         </tr>`).join('') : '<tr><td colspan="4" style="color:#94a3b8">No config entries yet.</td></tr>';
     } catch (e) { $('config-body').innerHTML = `<tr><td colspan="4" style="color:#fca5a5">${h(e.message)}</td></tr>`; }
+  }
+
+  // ── Metrics ───────────────────────────────────────────────────
+  async function loadMetrics() {
+    try {
+      const m = await api('/admin/v1/metrics');
+      const grid = $('metrics-grid');
+      const entities = m.entities || {};
+      const colors = { users:'#38bdf8', tasks:'#4ade80', habits:'#a78bfa', moods:'#fbbf24', deals:'#fb923c', places:'#f472b6', channels:'#60a5fa', bulletins:'#34d399', notifications:'#f87171' };
+      grid.innerHTML = Object.entries(entities).map(([k, v]) => `
+        <div style="background:#0f172a;padding:0.75rem;border-radius:0.5rem;text-align:center">
+          <div style="font-size:1.5rem;font-weight:700;color:${colors[k] || '#94a3b8'}">${v}</div>
+          <div style="font-size:0.75rem;color:#94a3b8;text-transform:capitalize">${k}</div>
+        </div>`).join('');
+
+      const health = $('metrics-health');
+      health.innerHTML = `
+        <p>Audit log entries: <strong>${m.auditLogCount}</strong></p>
+        <p>Sync queue depth: <strong>${m.syncQueueDepth}</strong></p>
+        <p>Uptime: <strong>${Math.round(m.uptimeSec / 60)}m</strong></p>`;
+    } catch (e) {
+      $('metrics-grid').innerHTML = `<div style="color:#fca5a5">${h(e.message)}</div>`;
+    }
   }
 
   // ── Init ──────────────────────────────────────────────────────

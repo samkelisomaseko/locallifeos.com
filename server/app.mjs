@@ -10,9 +10,10 @@ import adminConfigPlugin from './plugins/admin-config.mjs';
 import adminPanelPlugin from './plugins/admin-panel.mjs';
 import weatherPlugin from './plugins/weather.mjs';
 import profileSettingsPlugin from './plugins/profile-settings.mjs';
+import entitiesPlugin from './plugins/entities.mjs';
 import { hashPassword } from './lib/crypto.mjs';
-import { eq } from 'drizzle-orm';
-import { users } from './db/schema.js';
+import { eq, sql } from 'drizzle-orm';
+import { users, tasks, habits, moods, deals, places, channels, bulletins, notifications, auditLogs } from './db/schema.js';
 
 /**
  * Fastify app factory (Phase 2 — Real Backend).
@@ -75,6 +76,9 @@ export async function buildApp(opts = {}) {
   await app.register(weatherPlugin);
   await app.register(profileSettingsPlugin);
 
+  // ── Entity CRUD routes (auth + ownership-gated) ────────────────
+  await app.register(entitiesPlugin);
+
   // ── Health check (public — mask internal details) ──────────────
   app.get('/api/v1/health', async () => {
     return {
@@ -91,10 +95,42 @@ export async function buildApp(opts = {}) {
     return reply.send({
       ok: true,
       service: 'locallifeos-api',
-      version: '0.2.0',
+      version: '0.3.0',
       db: db.ok ? 'up' : `down: ${db.error}`,
       uptimeSec: Math.round(process.uptime()),
     });
+  });
+
+  // ── Admin metrics (role-gated via admin plugins) ──────────────
+  app.get('/admin/v1/metrics', async (_req, reply) => {
+    try {
+      const db = getDb();
+      const [userCount] = await db.select({ count: sql`count(*)::int` }).from(users);
+      const [taskCount] = await db.select({ count: sql`count(*)::int` }).from(tasks);
+      const [habitCount] = await db.select({ count: sql`count(*)::int` }).from(habits);
+      const [moodCount] = await db.select({ count: sql`count(*)::int` }).from(moods);
+      const [dealCount] = await db.select({ count: sql`count(*)::int` }).from(deals);
+      const [placeCount] = await db.select({ count: sql`count(*)::int` }).from(places);
+      const [channelCount] = await db.select({ count: sql`count(*)::int` }).from(channels);
+      const [bulletinCount] = await db.select({ count: sql`count(*)::int` }).from(bulletins);
+      const [notifCount] = await db.select({ count: sql`count(*)::int` }).from(notifications);
+      const [auditCount] = await db.select({ count: sql`count(*)::int` }).from(auditLogs);
+      const queueDepth = 0; // Sync queue is client-side; metrics show entity counts + audit
+
+      return reply.send({
+        entities: {
+          users: userCount.count, tasks: taskCount.count, habits: habitCount.count,
+          moods: moodCount.count, deals: dealCount.count, places: placeCount.count,
+          channels: channelCount.count, bulletins: bulletinCount.count,
+          notifications: notifCount.count,
+        },
+        auditLogCount: auditCount.count,
+        syncQueueDepth: queueDepth,
+        uptimeSec: Math.round(process.uptime()),
+      });
+    } catch {
+      return reply.send({ entities: {}, auditLogCount: 0, syncQueueDepth: 0, uptimeSec: Math.round(process.uptime()) });
+    }
   });
 
   // ── Seed demo user on first start ──────────────────────────────
