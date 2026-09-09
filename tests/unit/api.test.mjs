@@ -3,14 +3,25 @@ import assert from 'node:assert/strict';
 import { buildApp } from '../../server/app.mjs';
 
 describe('API scaffold', () => {
-  test('GET /api/v1/health returns ok + degraded db status when DATABASE_URL is unset', async () => {
-    delete process.env.DATABASE_URL; // deterministic: no DB in this environment
+  test('GET /api/v1/health returns ok without exposing db status', async () => {
+    delete process.env.DATABASE_URL;
     const app = await buildApp({ logger: false });
     const res = await app.inject({ method: 'GET', url: '/api/v1/health' });
     assert.equal(res.statusCode, 200);
     const body = res.json();
     assert.equal(body.ok, true);
     assert.equal(body.service, 'locallifeos-api');
+    assert.equal(body.db, undefined); // public endpoint must not expose db status
+    await app.close();
+  });
+
+  test('GET /api/v1/health/detail exposes db status', async () => {
+    delete process.env.DATABASE_URL;
+    const app = await buildApp({ logger: false });
+    const res = await app.inject({ method: 'GET', url: '/api/v1/health/detail' });
+    assert.equal(res.statusCode, 200);
+    const body = res.json();
+    assert.equal(body.ok, true);
     assert.match(body.db, /^down:/);
     await app.close();
   });

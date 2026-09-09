@@ -69,16 +69,26 @@ export async function buildApp(opts = {}) {
   await app.register(adminConfigPlugin);
   await app.register(adminPanelPlugin);
 
-  // ── Health check ───────────────────────────────────────────────
+  // ── Health check (public — mask internal details) ──────────────
   app.get('/api/v1/health', async () => {
-    const db = await pingDb();
     return {
+      ok: true,
+      service: 'locallifeos-api',
+      version: '0.2.0',
+      uptimeSec: Math.round(process.uptime()),
+    };
+  });
+
+  // ── Health check (admin — full details) ────────────────────────
+  app.get('/api/v1/health/detail', async (_req, reply) => {
+    const db = await pingDb();
+    return reply.send({
       ok: true,
       service: 'locallifeos-api',
       version: '0.2.0',
       db: db.ok ? 'up' : `down: ${db.error}`,
       uptimeSec: Math.round(process.uptime()),
-    };
+    });
   });
 
   // ── Seed demo user on first start ──────────────────────────────
