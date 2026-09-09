@@ -14,7 +14,10 @@
         const isDarkMode = document.body.classList.contains('dark-mode');
         if (darkModeToggleVisual) darkModeToggleVisual.classList.toggle('active', isDarkMode);
         if (darkModeToggleContainer) darkModeToggleContainer.setAttribute('aria-checked', isDarkMode.toString());
-        localStorage.setItem('darkMode', isDarkMode.toString()); 
+        saveSettingsWriteThrough(
+          { darkMode: isDarkMode },
+          { darkMode: isDarkMode.toString() }
+        );
         renderHabits(); 
         const activeScreenId = document.querySelector('.screen.active')?.id;
         if (activeScreenId === 'explore') {
@@ -35,7 +38,10 @@
         if (buttonElement) {
             buttonElement.classList.add('active'); buttonElement.setAttribute('aria-checked', 'true');
         }
-        localStorage.setItem('themeAccent', color);
+        saveSettingsWriteThrough(
+          { themeAccent: color },
+          { themeAccent: color }
+        );
     }
     function changeAIPersonality(personality) {
         if (personality.includes('(Pro)') && !userSubscriptionTier.startsWith('pro')) {
@@ -45,7 +51,10 @@
             return;
         }
         currentAiPersonality = personality;
-        localStorage.setItem('aiPersonality', personality);
+        saveSettingsWriteThrough(
+          { aiPersonality: personality },
+          { aiPersonality: personality }
+        );
         showToast(`AI Personality set to ${personality.replace(' (Pro)', '')}.`, "ai_info", 2000);
         addMessageToAIChat('other', `${getAIPersonalityPrefix()}${personality.replace(' (Pro)', '').charAt(0).toUpperCase() + personality.replace(' (Pro)', '').slice(1)} AI ready. ${personality === 'witty' ? 'Try not to bore me.' : 'How can I assist?'}`);
     }
@@ -109,7 +118,10 @@
              aiGreetingEl.textContent = currentGreeting.replace(namePart, userName);
         }
         saveUsersToLocalStorage(); 
-        localStorage.setItem('userProfile', JSON.stringify({ name: newName, username: newUsername, bio: newBio, location: newLocation, interests: newInterests }));
+        saveProfileWriteThrough(
+          { displayName: newName, bio: newBio },
+          { userProfile: JSON.stringify({ name: newName, username: newUsername, bio: newBio, location: newLocation, interests: newInterests }) }
+        );
         showToast("Profile saved. AI can use this for better personalization.", "success");
         closeModal('userProfileModal');
     }

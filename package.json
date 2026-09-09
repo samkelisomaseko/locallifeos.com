@@ -16,6 +16,7 @@
     "lint": "eslint server vite.config.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test",
+    "test:admin": "node --test tests/unit/admin-e2e.test.mjs",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

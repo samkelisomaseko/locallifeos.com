@@ -1,8 +1,25 @@
 ﻿## Last Updated: 2026-09-09
-## Session: 7 of estimated 60
-## Trace ID: phase2-real-backend
+## Session: 8 of estimated 60
+## Trace ID: phase2-closeout
 
-### Completed (new this session — PHASE 2 COMPLETE)
+### Completed (new this session — PHASE 2 CLOSE-OUT)
+- **test:admin E2E gate** (`npm run test:admin`): 5 describe blocks, ~20 tests
+  - RBAC enforcement: unauthenticated→401, regular user→403, super_admin→200
+  - Users CRUD: list, inspect, suspend/unsuspend, soft-delete, reset-password, subscription tier override, super_admin protection
+  - Feature flags CRUD: create, update, list
+  - App config CRUD: create, update, list, validation (missing value→400)
+  - Audit log assertions: every mutation (user.suspend, flag.create, config.create) writes to audit_logs with actorId, before/after states
+  - All integration tests require DATABASE_URL; skipped gracefully when absent
+- **Weather proxy** moved from legacy `server/serve.mjs` to Fastify pipeline
+  - New `server/plugins/weather.mjs`: SSRF allow-listed to `api.openweathermap.org` only, 5s timeout, env key server-side
+  - Registered in `server/app.mjs`, legacy serve.mjs untouched (can be deprecated separately)
+- **Profile/settings write-through sync**
+  - New `server/plugins/profile-settings.mjs`: GET/PUT `/api/v1/me/profile`, GET/PUT `/api/v1/me/settings`
+  - New `public/lib/server-sync.js`: write-through helper (server first, localStorage as offline cache)
+  - `settings-deals.js` updated: darkMode, themeAccent, aiPersonality, and profile saves now use write-through
+  - Server sync is fire-and-forget (non-blocking), UI stays responsive offline
+- **Mojibake audit**: zero mojibake bytes found in public/modules/ (cleaned during Phase 1 extraction)
+- Gates: lint 0 errors, typecheck clean, 43/43 tests pass, build clean
 - Auth API: Argon2id password hashing, SHA-256 session tokens, HttpOnly cookies
   - Routes: POST /api/v1/auth/signup, /login, /logout, /reset-password; GET /api/v1/auth/me
   - Demo user seeded on first start: test@example.com / password (role: super_admin)
@@ -81,12 +98,12 @@ Byte-exact extraction preserves current behavior exactly (dead stays dead; both 
 - Database not provisioned yet — npm run db:migrate requires a live Postgres instance. Auth/admin routes degrade gracefully (skip seed, return 400/401 on DB-dependent operations). Connect DATABASE_URL to .env when ready.
 
 ### Known Issues
-- Minor mojibake in some string literals of db-pro.js / ai-super-core.js (e.g. "2�?`min", header em-dash) — pre-existing byte-level encoding damage; cosmetic only (parses fine), fix opportunistically
 - Google Maps key still reaches the browser (by design — referrer-restricted client key; see README)
 - tests/e2e/baseline.spec.mjs only writes baselines, never compares; A/B spec is the real pixel gate
 - A/B test titles still say "old (inline CSS) vs new (extracted CSS)" — stale naming; actual comparison is HEAD build vs working-tree build
 - PowerShell 5.1: Start-Process lacks -Environment (use cmd /c); backticks in inline node -e get eaten (write .cjs files instead); Set-Content -NoNewline collapses piped arrays
 - node --check on classic browser scripts needs a .cjs copy (Node ESM autodetection rejects legal duplicate function declarations)
+- Legacy serve.mjs weather proxy still present (can be deprecated once Fastify serves static in production)
 
 ### Next Up
 - Phase 2b: Connect Postgres, run db:migrate, verify full auth flow end-to-end

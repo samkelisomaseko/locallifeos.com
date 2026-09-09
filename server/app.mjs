@@ -8,6 +8,8 @@ import authPlugin from './plugins/auth.mjs';
 import adminUsersPlugin from './plugins/admin-users.mjs';
 import adminConfigPlugin from './plugins/admin-config.mjs';
 import adminPanelPlugin from './plugins/admin-panel.mjs';
+import weatherPlugin from './plugins/weather.mjs';
+import profileSettingsPlugin from './plugins/profile-settings.mjs';
 import { hashPassword } from './lib/crypto.mjs';
 import { eq } from 'drizzle-orm';
 import { users } from './db/schema.js';
@@ -68,6 +70,10 @@ export async function buildApp(opts = {}) {
   await app.register(adminUsersPlugin);
   await app.register(adminConfigPlugin);
   await app.register(adminPanelPlugin);
+
+  // ── User routes (auth-gated inside each plugin) ────────────────
+  await app.register(weatherPlugin);
+  await app.register(profileSettingsPlugin);
 
   // ── Health check (public — mask internal details) ──────────────
   app.get('/api/v1/health', async () => {

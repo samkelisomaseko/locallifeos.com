@@ -188,5 +188,53 @@
     "priority": "critical",
     "assigned_workstream": "backend",
     "verification_method": "manual_test"
+  },
+  {
+    "id": 14,
+    "category": "testing",
+    "description": "Admin E2E gate: RBAC role enforcement (unauthenticated/user/admin), per-entity CRUD (users, flags, config), audit-log assertions",
+    "steps": [
+      "npm run test:admin runs tests/unit/admin-e2e.test.mjs",
+      "RBAC: unauthenticated→401, user→403, super_admin→200 on all /admin/v1/*",
+      "Users: list, inspect, suspend/unsuspend, soft-delete, reset-password, subscription tier",
+      "Flags: create, update, list",
+      "Config: create, update, list, validation",
+      "Audit: every mutation writes to audit_logs with actorId, before/after"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "integration_tests"
+  },
+  {
+    "id": 15,
+    "category": "backend",
+    "description": "Weather proxy in Fastify pipeline with SSRF allow-list (api.openweathermap.org only), 5s timeout, env key server-side",
+    "steps": [
+      "GET /api/weather?lat=X&lon=Y returns live weather data",
+      "SSRF: non-allowed host rejected with 400",
+      "Missing OPENWEATHER_API_KEY returns 500",
+      "Upstream timeout returns 502"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "unit_tests"
+  },
+  {
+    "id": 16,
+    "category": "backend",
+    "description": "Profile/settings write-through sync: server API (GET/PUT /api/v1/me/profile, /api/v1/me/settings) with localStorage as offline cache",
+    "steps": [
+      "GET /api/v1/me/profile returns user profile (auth required)",
+      "PUT /api/v1/me/profile updates displayName/bio/avatarUrl",
+      "GET /api/v1/me/settings returns settings payload",
+      "PUT /api/v1/me/settings merges new settings into payload",
+      "Client: darkMode/themeAccent/aiPersonality/profile saves use write-through (server + localStorage)"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "fullstack",
+    "verification_method": "manual_test"
   }
 ]
