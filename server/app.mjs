@@ -8,10 +8,12 @@ import authPlugin from './plugins/auth.mjs';
 import adminUsersPlugin from './plugins/admin-users.mjs';
 import adminConfigPlugin from './plugins/admin-config.mjs';
 import adminPanelPlugin from './plugins/admin-panel.mjs';
+import adminEntitiesPlugin from './plugins/admin-entities.mjs';
 import weatherPlugin from './plugins/weather.mjs';
 import profileSettingsPlugin from './plugins/profile-settings.mjs';
 import entitiesPlugin from './plugins/entities.mjs';
 import { hashPassword } from './lib/crypto.mjs';
+import { requireAuth, requireRole } from './middleware/auth.mjs';
 import { eq, sql } from 'drizzle-orm';
 import { users, tasks, habits, moods, deals, places, channels, bulletins, notifications, auditLogs } from './db/schema.js';
 
@@ -71,6 +73,7 @@ export async function buildApp(opts = {}) {
   await app.register(adminUsersPlugin);
   await app.register(adminConfigPlugin);
   await app.register(adminPanelPlugin);
+  await app.register(adminEntitiesPlugin);
 
   // ── User routes (auth-gated inside each plugin) ────────────────
   await app.register(weatherPlugin);
@@ -101,8 +104,8 @@ export async function buildApp(opts = {}) {
     });
   });
 
-  // ── Admin metrics (role-gated via admin plugins) ──────────────
-  app.get('/admin/v1/metrics', async (_req, reply) => {
+  // ── Admin metrics (role-gated) ─────────────────────────────────
+  app.get('/admin/v1/metrics', { preHandler: [requireAuth, requireRole('super_admin', 'admin', 'moderator')] }, async (_req, reply) => {
     try {
       const db = getDb();
       const [userCount] = await db.select({ count: sql`count(*)::int` }).from(users);

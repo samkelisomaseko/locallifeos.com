@@ -1,6 +1,28 @@
-﻿## Last Updated: 2026-09-09
-## Session: 8 of estimated 60
-## Trace ID: phase2-closeout
+﻿## Last Updated: 2026-10-07
+## Session: 9 of estimated 60
+## Trace ID: phase3-batch-b
+
+### Completed (new this session — PHASE 3 BATCH B)
+- **Validation lib** (`server/lib/validation.mjs`): per-entity JSON-Schema-style
+  schemas (required fields, enums, ranges) for all 14 entities; entity CRUD
+  now returns 400 + human-readable `details` on failure.
+- **Offline-cache abstraction** (`public/lib/offline-cache.js`): single module
+  owning all browser persistence (prefixed `llos.*` keys, sync-queue helpers,
+  raw-key helpers for legacy keys). `store.js` queue + `server-sync.js`
+  refactored through it — zero direct `localStorage.` touches in new code.
+- **Admin entities + moderation** (`server/plugins/admin-entities.mjs`):
+  per-entity list/search/filter, inspect, override-edit, suspend/restore
+  (deals, bulletins), deals approve/reject review queue, sync-health with live
+  counts — every mutation audit-logged before/after. Moderator role included.
+- **Metrics secured**: `/admin/v1/metrics` was public — now requires
+  admin/moderator role (was returning live counts to anyone).
+- **Tests** (`tests/unit/batch-b.test.mjs`): 13 tests — schemas, LWW/backoff
+  semantics, no-direct-localStorage assertion, unauth 401 on admin routes.
+- Gates: lint 0, typecheck clean, 55 pass + 1 skip, build clean.
+- Known gap (Batch C): legacy `public/modules/*` still use raw localStorage
+  internally (pre-existing); migration of those modules + media uploads remain.
+
+### Completed (prior — PHASE 3 BATCH A)
 
 ### Completed (new this session — PHASE 2 CLOSE-OUT)
 - **test:admin E2E gate** (`npm run test:admin`): 5 describe blocks, ~20 tests

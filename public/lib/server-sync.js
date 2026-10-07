@@ -1,11 +1,16 @@
 /**
  * @module lib/server-sync
- * Write-through sync helper: save to server API first, localStorage as offline cache.
- * Used by settings-deals.js for theme/profile/settings persistence.
+ * Write-through sync helper: save to server API first, offline-cache as local copy.
+ * All browser persistence routes through lib/offline-cache (no direct localStorage).
  */
-const SYNC_API_BASE = window.location.port === '5173'
+
+function cache() {
+  return import('./offline-cache.js');
+}
+
+const SYNC_API_BASE = (typeof window !== 'undefined' && window.location.port === '5173')
   ? `${window.location.protocol}//${window.location.hostname}:3001`
-  : window.location.origin;
+  : (typeof window !== 'undefined' ? window.location.origin : '');
 
 async function serverSync(path, body) {
   try {
@@ -18,35 +23,34 @@ async function serverSync(path, body) {
     if (!res.ok) throw new Error(`Server ${res.status}`);
     return true;
   } catch {
-    // Server unavailable — localStorage cache is the fallback
     return false;
   }
 }
 
 /**
- * Save settings write-through: PUT /api/v1/me/settings + localStorage.
- * @param {object} serverPayload - goes to server (merged into settings.payload)
- * @param {object} localPayload - goes to localStorage keys
+ * Save settings write-through: PUT /api/v1/me/settings + offline cache.
  */
-function saveSettingsWriteThrough(serverPayload, localPayload) {
-  // Always write localStorage immediately (offline-first)
+async function saveSettingsWriteThrough(serverPayload, localPayload) {
+  const { rawSet, rawRemove } = await cache();
   for (const [key, val] of Object.entries(localPayload)) {
-    if (val === undefined || val === null) {
-      localStorage.removeItem(key);
-    } else {
-      localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
-    }
+    if (val === undefined || val === null) rawRemove(key);
+    else rawSet(key, val);
   }
-  // Fire-and-forget server sync (non-blocking)
   serverSync('/api/v1/me/settings', { settings: serverPayload });
 }
 
 /**
- * Save profile write-through: PUT /api/v1/me/profile + localStorage.
+ * Save profile write-through: PUT /api/v1/me/profile + offline cache.
  */
-function saveProfileWriteThrough(serverPayload, localPayload) {
-  for (const [key, val] of Object.entries(localPayload)) {
-    localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
-  }
+async function saveProfileWriteThrough(serverPayload, localPayload) {
+  const { rawSet } = await cache();
+  for (const [key, val] of Object.entries(localPayload)) rawSet(key, val);
   serverSync('/api/v1/me/profile', serverPayload);
 }
+
+if (typeof window !== 'undefined') {
+  window.saveSettingsWriteThrough = saveSettingsWriteThrough;
+  window.saveProfileWriteThrough = saveProfileWriteThrough;
+}
+
+export { saveSettingsWriteThrough, saveProfileWriteThrough };

@@ -10,6 +10,7 @@ import { getDb } from '../db/client.mjs';
 import { requireAuth } from '../middleware/auth.mjs';
 import { scopeToUser } from '../middleware/ownership.mjs';
 import { writeAuditLog } from '../lib/audit.mjs';
+import { validateEntity } from '../lib/validation.mjs';
 
 const ENTITY_TABLES = {
   tasks: () => import('../db/schema.js').then(m => m.tasks),
@@ -35,23 +36,7 @@ const ENTITY_SINGULAR = {
   gamification: 'gamification', applets: 'applet', integratedApps: 'integratedApp',
 };
 
-// Validation schemas per entity (minimal required fields)
-const VALIDATORS = {
-  tasks: (d) => typeof d.title === 'string' && d.title.length > 0,
-  habits: (d) => typeof d.name === 'string' && d.name.length > 0,
-  moods: (d) => typeof d.mood === 'string',
-  sleep: (d) => typeof d.date === 'string',
-  places: (d) => typeof d.name === 'string' && d.name.length > 0,
-  deals: (d) => typeof d.businessName === 'string' && typeof d.description === 'string',
-  channels: (d) => typeof d.name === 'string' && d.name.length > 0,
-  messages: (d) => typeof d.content === 'string' && d.content.length > 0,
-  bulletins: (d) => typeof d.title === 'string' && typeof d.content === 'string',
-  notifications: (d) => typeof d.type === 'string' && typeof d.title === 'string',
-  trustedContacts: (d) => typeof d.name === 'string' && d.name.length > 0,
-  gamification: () => true,
-  applets: (d) => typeof d.name === 'string' && d.name.length > 0,
-  integratedApps: (d) => typeof d.appName === 'string' && d.appName.length > 0,
-};
+// Validation lives in server/lib/validation.mjs (JSON-Schema style, Batch B).
 
 export default async function entitiesPlugin(app) {
   // ── Auth for all entity routes ─────────────────────────────────
@@ -61,7 +46,6 @@ export default async function entitiesPlugin(app) {
   for (const [entityName, tableGetter] of Object.entries(ENTITY_TABLES)) {
     const table = await tableGetter();
     const basePath = `/api/v1/${entityName}`;
-    const validate = VALIDATORS[entityName];
 
     // ── GET /api/v1/:entity — list ───────────────────────────────
     app.get(basePath, async (req, reply) => {
@@ -102,8 +86,9 @@ export default async function entitiesPlugin(app) {
     app.post(basePath, async (req, reply) => {
       const db = getDb();
       const body = req.body ?? {};
-      if (validate && !validate(body)) {
-        return reply.code(400).send({ error: 'Validation failed.' });
+      const result = validateEntity(entityName, body);
+      if (entityName !== 'gamification' && !result.ok) {
+        return reply.code(400).send({ error: 'Validation failed.', details: result.errors });
       }
       const now = new Date();
       const record = {

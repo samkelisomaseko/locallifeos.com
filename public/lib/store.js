@@ -19,22 +19,19 @@ export const ENTITIES = [
   'profile', 'settings',
 ];
 
-// ── Pending sync queue ──────────────────────────────────────────
-const QUEUE_KEY = 'pendingSyncQueue';
+// ── Pending sync queue (via offline-cache abstraction — no direct localStorage here)
+import { getSyncQueue, setSyncQueue, enqueueSyncOp } from './offline-cache.js';
 
 function getQueue() {
-  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); }
-  catch { return []; }
+  return getSyncQueue();
 }
 
 function setQueue(q) {
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+  setSyncQueue(q);
 }
 
 function enqueueSync(entity, action, id, data) {
-  const queue = getQueue();
-  queue.push({ entity, action, id, data, timestamp: Date.now(), retries: 0 });
-  setQueue(queue);
+  enqueueSyncOp({ entity, action, id, data });
 }
 
 // ── LocalStore (IndexedDB) ──────────────────────────────────────
