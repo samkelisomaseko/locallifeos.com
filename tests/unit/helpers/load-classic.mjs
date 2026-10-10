@@ -1,5 +1,16 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+// Classic-script shims the migrated public/modules/*.js depend on
+// (window.LLOS_Cache, window.LLOS_Escape). Loaded first so vm-loaded
+// modules resolve them exactly as the browser does via <script> order.
+const SHIMS = [
+  '../../../public/lib/offline-cache-global.js',
+  '../../../public/lib/escape.js',
+].map((rel) => path.join(HERE, rel));
 
 // Loads classic browser scripts (public/modules/*.js) into a fresh vm context.
 // `window` IS the sandbox object, so `window.X = ...` assignments become visible
@@ -86,7 +97,7 @@ export function loadClassic(files, { sandboxExtras = {} } = {}) {
   const context = vm.createContext(sandbox);
   // Evaluate expressions INSIDE the context (can see top-level const/let of loaded scripts)
   sandbox.evaluate = (code) => vm.runInContext(`(${code})`, context);
-  for (const file of files) {
+  for (const file of [...SHIMS.filter((f) => existsSync(f)), ...files]) {
     vm.runInContext(readFileSync(file, 'utf8'), context, { filename: file });
   }
   return sandbox;

@@ -1,0 +1,23 @@
+{
+  "name": "LocalLife OS",
+  "short_name": "LocalLife",
+  "description": "LocalLife OS — your community, connected.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#4DB6AC",
+  "background_color": "#F8F9FA",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

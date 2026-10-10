@@ -55,7 +55,10 @@ export default async function adminEntitiesPlugin(app) {
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
     const rows = await db.select().from(table).orderBy(desc(table.updatedAt)).limit(limitNum).offset((pageNum - 1) * limitNum);
     let filtered = rows;
-    if (userId && 'userId' in table) filtered = filtered.filter((r) => r.userId === userId);
+    if (userId) {
+      if ('userId' in table) filtered = filtered.filter((r) => r.userId === userId);
+      else if ('createdBy' in table) filtered = filtered.filter((r) => r.createdBy === userId);
+    }
     if (status && STATUS_FIELD[req.params.entity]) {
       filtered = filtered.filter((r) => r[STATUS_FIELD[req.params.entity]] === status);
     }

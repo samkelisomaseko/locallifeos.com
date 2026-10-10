@@ -125,9 +125,9 @@
                     if (channel.type === 'direct_message') {
                         const otherUserId = channel.participantIds.find(id => id !== 'user');
                         const otherUser = mockUsers[otherUserId];
-                        avatarHtml = `<img src="${otherUser.avatarUrl}" alt="${otherUser.name}" class="channel-icon" style="width:48px; height:48px; object-fit: cover;" loading="lazy" />`;
+                        avatarHtml = `<img src="${LLOS_Escape.safeMediaUrl(otherUser.avatarUrl)}" alt="${LLOS_Escape.escapeAttr(otherUser.name)}" class="channel-icon" style="width:48px; height:48px; object-fit: cover;" loading="lazy" />`;
                     } else if (channel.customIconUrl) {
-                        avatarHtml = `<img src="${channel.customIconUrl}" alt="${channel.name}" class="channel-icon" style="width:48px; height:48px; object-fit: cover;" loading="lazy" />`;
+                        avatarHtml = `<img src="${LLOS_Escape.safeMediaUrl(channel.customIconUrl)}" alt="${LLOS_Escape.escapeAttr(channel.name)}" class="channel-icon" style="width:48px; height:48px; object-fit: cover;" loading="lazy" />`;
                     } else {
                          const tempAvatarText = channel.name.split(' ').map(w => w[0]).join('').substring(0,2);
                          const colorCode = (channel.color || 'var(--primary-accent)').replace('var(--','').replace(')','').trim();
@@ -138,12 +138,12 @@
                         ${avatarHtml}
                         <div class="channel-info-wrapper">
                              <div class="channel-info">
-                                <div class="name">${channel.name}</div>
-                                <div class="-message">${channel.lastMessage || 'No messages yet.'}</div>
+                                <div class="name">${LLOS_Escape.escapeHtml(channel.name)}</div>
+                                <div class="-message">${LLOS_Escape.escapeHtml(channel.lastMessage || 'No messages yet.')}</div>
                             </div>
                             <div class="channel-actions-container">
                                 <span class="-message-timestamp">${formattedTimestamp}</span>
-                                ${channel.unreadCount > 0 ? `<span class="unread-badge">${channel.unreadCount}</span>` : `<i class="channel-favorite-icon ${favoriteIconClass}" onclick="event.stopPropagation(); toggleFavoriteChannel(${channel.id}, false, this);" aria-label="${channel.isFavorite ? 'Unfavorite' : 'Favorite'} channel ${channel.name}"></i>`}
+                                ${channel.unreadCount > 0 ? `<span class="unread-badge">${channel.unreadCount}</span>` : `<i class="channel-favorite-icon ${favoriteIconClass}" onclick="event.stopPropagation(); toggleFavoriteChannel(${channel.id}, false, this);" aria-label="${channel.isFavorite ? 'Unfavorite' : 'Favorite'} channel ${LLOS_Escape.escapeAttr(channel.name)}"></i>`}
                             </div>
                         </div>
                     `;
@@ -353,7 +353,7 @@
         document.getElementById('channelDetailModalTitle').textContent = channel.name;
         const iconEl = document.getElementById('channelDetailIcon');
         if (channel.customIconUrl) {
-            iconEl.innerHTML = `<img src="${channel.customIconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            iconEl.innerHTML = `<img src="${LLOS_Escape.safeMediaUrl(channel.customIconUrl)}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
             iconEl.style.backgroundColor = 'transparent';
         } else {
             iconEl.innerHTML = `<i class="${channel.icon}"></i>`;
@@ -446,14 +446,14 @@
         if(message.reactions && Object.keys(message.reactions).length > 0) {
             Object.entries(message.reactions).forEach(([emoji, data]) => {
                 const reactedByUser = data.users.includes('user');
-                reactionsHtml += `<button class="reaction-button ${reactedByUser ? 'reacted-by-user' : ''}" onclick="toggleReaction(${currentChatChannelId}, ${message.mid}, '${emoji}')" aria-label="React with ${emoji}">${emoji} ${data.count > 0 ? data.count : ''}</button>`;
+                reactionsHtml += `<button type="button" class="reaction-button ${reactedByUser ? 'reacted-by-user' : ''}" data-reaction-ch="${currentChatChannelId}" data-reaction-mid="${message.mid}" data-reaction-emoji="${LLOS_Escape.escapeAttr(emoji)}" aria-label="React with ${LLOS_Escape.escapeAttr(emoji)}">${LLOS_Escape.escapeHtml(emoji)} ${data.count > 0 ? data.count : ''}</button>`;
             });
         }
         reactionsHtml += '</div>';
         let senderNameHtml = '';
         const currentChannel = mockChannels.find(c => c.id === currentChatChannelId);
         if (!senderIsUser && currentChannel?.type !== 'direct_message') {
-            senderNameHtml = `<strong class="chat-sender-name" onclick="showOtherUserProfile('${message.senderId}')">${senderDetails.name}</strong>`;
+            senderNameHtml = `<strong class="chat-sender-name" data-profile-user="${LLOS_Escape.escapeAttr(message.senderId)}">${LLOS_Escape.escapeHtml(senderDetails.name)}</strong>`;
         }
         let messageMetaHtml = `<span class="message-meta"><span class="timestamp">${messageTime}</span>`;
         if(senderIsUser) { 
@@ -465,7 +465,7 @@
         
         let bubbleContentHtml = `
             <div class="chat-bubble-content">
-                <span class="chat-bubble-text">${message.text.replace(/\n/g, '<br>')}</span>
+                <span class="chat-bubble-text">${LLOS_Escape.escapeHtml(message.text).replace(/\n/g, '<br>')}</span>
                 ${messageMetaHtml}
             </div>
         `;
@@ -611,7 +611,7 @@
                     if(message.reactions && Object.keys(message.reactions).length > 0) {
                         Object.entries(message.reactions).forEach(([emoji, data]) => {
                              const reactedByUser = data.users.includes('user');
-                             reactionsHtml += `<button class="reaction-button ${reactedByUser ? 'reacted-by-user' : ''}" onclick="toggleReaction(${currentChatChannelId}, ${message.mid}, '${emoji}')" aria-label="React with ${emoji}">${emoji} ${data.count > 0 ? data.count : ''}</button>`;
+                             reactionsHtml += `<button type="button" class="reaction-button ${reactedByUser ? 'reacted-by-user' : ''}" data-reaction-ch="${currentChatChannelId}" data-reaction-mid="${message.mid}" data-reaction-emoji="${LLOS_Escape.escapeAttr(emoji)}" aria-label="React with ${LLOS_Escape.escapeAttr(emoji)}">${LLOS_Escape.escapeHtml(emoji)} ${data.count > 0 ? data.count : ''}</button>`;
                         });
                     }
                     reactionContainer.innerHTML = reactionsHtml;
@@ -698,7 +698,10 @@
                 } else if (messageText.toLowerCase().includes("remember to") || messageText.toLowerCase().includes("i need to add task")) {
                     const taskMatch = messageText.match(/(remember to|i need to add task)\s+(.*)/i);
                     if (taskMatch && taskMatch[2]) {
-                        reply = `AI: I can help with that, ${userName}! Would you like me to add "${taskMatch[2].substring(0,30)}..." as a task for you? <button class="button" onclick="addNewTask('${taskMatch[2].replace(/'/g, "\\'")}')">Yes, Add Task</button>`;
+                        // XSS hardening: user fragment escaped for both JS-string and
+                        // HTML layers (render path escapes the whole bubble as well).
+                        const safeTask = LLOS_Escape.escapeHtml(LLOS_Escape.escapeJsSingle(taskMatch[2]));
+                        reply = `AI: I can help with that, ${userName}! Would you like me to add "${LLOS_Escape.escapeHtml(taskMatch[2].substring(0,30))}..." as a task for you? <button class="button" onclick="addNewTask('${safeTask}')">Yes, Add Task</button>`;
                         isAIIntervention = true;
                     }
                 } else if (messageText.toLowerCase().includes("help me draft a reply") && messageText.length > 20 && aiLearningPreferences.learnChatStyle) {
@@ -726,6 +729,22 @@
     if (specificChatInput) {
         specificChatInput.addEventListener('keypress', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendSpecificChatMessage(); }});
         specificChatInput.addEventListener('input', () => handleChatInputTyping(specificChatInput, 'specific'));
+    }
+    // XSS hardening (feature 30): reaction emoji + sender profile rendered via
+    // data-attributes; clicks delegated here instead of inline onclick with data.
+    if (specificChatMessagesArea && !specificChatMessagesArea.dataset.xssBound) {
+        specificChatMessagesArea.dataset.xssBound = '1';
+        specificChatMessagesArea.addEventListener('click', function (e) {
+            const reactionBtn = e.target.closest('[data-reaction-emoji]');
+            if (reactionBtn && specificChatMessagesArea.contains(reactionBtn)) {
+                toggleReaction(Number(reactionBtn.getAttribute('data-reaction-ch')), Number(reactionBtn.getAttribute('data-reaction-mid')), reactionBtn.getAttribute('data-reaction-emoji'));
+                return;
+            }
+            const profileEl = e.target.closest('[data-profile-user]');
+            if (profileEl && specificChatMessagesArea.contains(profileEl)) {
+                showOtherUserProfile(profileEl.getAttribute('data-profile-user'));
+            }
+        });
     }
     function handleSpecificChatInputForMentions(textarea) {
         const text = textarea.value;

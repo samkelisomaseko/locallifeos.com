@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx vite build
+      - name: Secret scan (fail on leaked key material)
+        run: |
+          # Value-shaped patterns only: env-VAR NAMES (e.g. OPENWEATHER_API_KEY,
+          # VITE_GOOGLE_MAPS_API_KEY) are allowed; hardcoded key VALUES are not.
+          # The Google Maps key reaches index.html solely via the
+          # %VITE_GOOGLE_MAPS_API_KEY% build placeholder injected from env —
+          # never committed — so a literal AIza… value in dist/ means a leak.
+          if grep -rEn 'AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9]{16,}|BEGIN PRIVATE KEY' dist/ index.html public/lib public/modules 2>/dev/null; then
+            echo '::error::secret-scan: suspected hardcoded secret found (see matches above)'
+            exit 1
+          fi
+          # OpenWeather: flag only a hardcoded 32-hex appid assigned in source,
+          # not legitimate process.env.OPENWEATHER_API_KEY references.
+          if grep -rEn "OPENWEATHER[^'\"]*['\"][0-9a-f]{16,}" public/lib public/modules server vite.config.mjs 2>/dev/null; then
+            echo '::error::secret-scan: suspected hardcoded OpenWeather key'
+            exit 1
+          fi
+          echo 'secret-scan: clean'
+      - name: npm audit (warn-only)
+        run: npm audit --omit=dev || true
+
+  live-db:
+    runs-on: ubuntu-latest
+    # Skip gracefully when no live DB is configured (e.g. forks, PRs).
+    if: ${{ secrets.DATABASE_URL != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: npm run seed
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: npm run test:admin
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: npx playwright test
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

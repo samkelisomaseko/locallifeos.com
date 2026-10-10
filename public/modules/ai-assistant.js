@@ -11,7 +11,7 @@
             const potentialChannels = mockChannels.filter(ch => !ch.isJoined && ch.type !== 'announcements' && ch.id !== currentChatChannelId);
             if(potentialChannels.length > 0) {
                 const randomChannel = potentialChannels[Math.floor(Math.random() * potentialChannels.length)];
-                 openGenericModal("AI Channel Suggestion", `<p>Based on local activity and your interests, ${userName}, you might like the channel: <strong>${randomChannel.name}</strong>.</p><p><em>Description: ${randomChannel.description || 'General discussions.'}</em></p><button class="button mt-2" onclick="closeModal('genericModal'); toggleJoinChannel(${randomChannel.id}); showSpecificChatView(${randomChannel.id});">Join & View Channel</button>`);
+                 openGenericModal("AI Channel Suggestion", `<p>Based on local activity and your interests, ${LLOS_Escape.escapeHtml(userName)}, you might like the channel: <strong>${LLOS_Escape.escapeHtml(randomChannel.name)}</strong>.</p><p><em>Description: ${LLOS_Escape.escapeHtml(randomChannel.description || 'General discussions.')}</em></p><button class="button mt-2" onclick="closeModal('genericModal'); toggleJoinChannel(${randomChannel.id}); showSpecificChatView(${randomChannel.id});">Join & View Channel</button>`);
             } else {
                  showToast("AI: You've already joined most relevant channels or there aren't many new ones yet!", "ai_info");
             }
@@ -82,6 +82,17 @@
         if (aiChatTypingSuggestionEl) aiChatTypingSuggestionEl.textContent = '';
     }
     if (aiChatInputText) aiChatInputText.addEventListener('keypress', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIChatMessage(); }});
+    // XSS hardening (feature 30): itinerary "Add to Planner" buttons carry
+    // data-attributes; clicks delegated here instead of inline onclick with data.
+    if (typeof aiChatArea !== 'undefined' && aiChatArea && !aiChatArea.dataset.taskBound) {
+        aiChatArea.dataset.taskBound = '1';
+        aiChatArea.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-ai-add-task]');
+            if (btn && aiChatArea.contains(btn)) {
+                addNewTask(btn.getAttribute('data-ai-add-task'), btn.getAttribute('data-ai-add-cat') || null, btn.getAttribute('data-ai-add-time') || null);
+            }
+        });
+    }
     window.updateAIChatTypingSuggestion = function(text) {
         if (!aiChatTypingSuggestionEl) return;
         text = text.toLowerCase();
@@ -254,8 +265,8 @@
                 const topTasks = tasks.filter(t => !t.completed).slice(0, 3);
                 if (topTasks.length > 0) {
                     isHTMLResponse = true;
-                    response = `${contextMessage}Here are your top tasks, ${userName}:<ul>`;
-                    topTasks.forEach(t => response += `<li>${t.title} (${t.time || 'anytime'}) ${t.dueDate ? '(Due: '+t.dueDate+')':''}</li>`);
+                    response = `${contextMessage}Here are your top tasks, ${LLOS_Escape.escapeHtml(userName)}:<ul>`;
+                    topTasks.forEach(t => response += `<li>${LLOS_Escape.escapeHtml(t.title)} (${LLOS_Escape.escapeHtml(t.time || 'anytime')}) ${t.dueDate ? '(Due: '+LLOS_Escape.escapeHtml(t.dueDate)+')':''}</li>`);
                     response += "</ul>";
                 } else {
                     response = `${contextMessage}Looks like you're all caught up on tasks!`;
@@ -286,10 +297,10 @@
                     const eventPlace = mockPlaces.events.find(p => p.name.toLowerCase().includes("bushfire"));
                     isHTMLResponse = true;
                     response = `${contextMessage}Okay, ${userName}, here's a plan for a day out in Eswatini:<ul>`;
-                    if(coffeePlace) response += `<li>Morning: Start with coffee at <strong>${coffeePlace.name}</strong>. <button class="button-secondary" style="font-size:0.7rem;padding:2px 4px;" onclick="addNewTask('Coffee at ${coffeePlace.name}', 'personal', 'Morning')">Add to Planner</button></li>`;
-                    if(naturePlace) response += `<li>Mid-morning: A relaxing walk in <strong>${naturePlace.name}</strong>. <button class="button-secondary" style="font-size:0.7rem;padding:2px 4px;" onclick="addNewTask('Walk in ${naturePlace.name}', 'health', 'Mid-morning')">Add to Planner</button></li>`;
-                    if(lunchPlace) response += `<li>Lunch: Grab a bite at <strong>${lunchPlace.name}</strong>. <button class="button-secondary" style="font-size:0.7rem;padding:2px 4px;" onclick="addNewTask('Lunch at ${lunchPlace.name}', 'personal', 'Lunchtime')">Add to Planner</button></li>`;
-                    if(eventPlace) response += `<li>Afternoon: Check for tickets for <strong>${eventPlace.name}</strong>. <button class="button-secondary" style="font-size:0.7rem;padding:2px 4px;" onclick="addNewTask('Buy tickets for ${eventPlace.name}', 'personal', 'Afternoon')">Add to Planner</button></li>`;
+                    if(coffeePlace) response += `<li>Morning: Start with coffee at <strong>${LLOS_Escape.escapeHtml(coffeePlace.name)}</strong>. <button class="button-secondary" style="font-size:0.7rem;padding:2px 4px;" data-ai-add-task="Coffee at ${LLOS_Escape.escapeAttr(coffeePlace.name)}" data-ai-add-cat="personal" data-ai-add-time="Morning">Add to Planner</button></li>`;
+                    if(naturePlace) response += `<li>Mid-morning: A relaxing walk in <strong>${LLOS_Escape.escapeHtml(naturePlace.name)}</strong>. <button class="button-secondary" style="font-size:0.7rem;padding:2px 4px;" data-ai-add-task="Walk in ${LLOS_Escape.escapeAttr(naturePlace.name)}" data-ai-add-cat="health" data-ai-add-time="Mid-morning">Add to Planner</button></li>`;
+                    if(lunchPlace) response += `<li>Lunch: Grab a bite at <strong>${LLOS_Escape.escapeHtml(lunchPlace.name)}</strong>. <button class="button-secondary" style="font-size:0.7rem;padding:2px 4px;" data-ai-add-task="Lunch at ${LLOS_Escape.escapeAttr(lunchPlace.name)}" data-ai-add-cat="personal" data-ai-add-time="Lunchtime">Add to Planner</button></li>`;
+                    if(eventPlace) response += `<li>Afternoon: Check for tickets for <strong>${LLOS_Escape.escapeHtml(eventPlace.name)}</strong>. <button class="button-secondary" style="font-size:0.7rem;padding:2px 4px;" data-ai-add-task="Buy tickets for ${LLOS_Escape.escapeAttr(eventPlace.name)}" data-ai-add-cat="personal" data-ai-add-time="Afternoon">Add to Planner</button></li>`;
                     response += `</ul><p>Would you like me to search for any of these in Explore?</p>`;
                     requiresFollowUpInResponse = true;
                 }
@@ -299,10 +310,10 @@
                  const channel = mockChannels.find(c => c.name.toLowerCase().includes(channelName.toLowerCase()));
                  if (channel && channel.messages && channel.messages.length > 0) {
                     isHTMLResponse = true;
-                    response = `Here's a quick summary for "${channel.name}":<ul>`;
+                    response = `Here's a quick summary for "${LLOS_Escape.escapeHtml(channel.name)}":<ul>`;
                     channel.messages.slice(-Math.min(3, channel.messages.length)).forEach(msg => {
                         let senderDetails = mockUsers[msg.senderId] || mockUsers.defaultBot;
-                        response += `<li><strong>${senderDetails.name}:</strong> ${msg.text.substring(0,40)}...</li>`;
+                        response += `<li><strong>${LLOS_Escape.escapeHtml(senderDetails.name)}:</strong> ${LLOS_Escape.escapeHtml(msg.text.substring(0,40))}...</li>`;
                     });
                     response += "</ul><p><em>This is a brief summary. Full history in the channel.</em></p>";
                 } else if (channel) {
@@ -312,7 +323,7 @@
                 }
             } else if (command.startsWith("plan my party")) {
                 isHTMLResponse = true;
-                response = `${contextMessage}Okay, ${userName}, let's plan your party! Here are some steps we can take:
+                response = `${contextMessage}Okay, ${LLOS_Escape.escapeHtml(userName)}, let's plan your party! Here are some steps we can take:
                     <ul>
                         <li><strong>Set Date & Time:</strong> When do you want the party?</li>
                         <li><strong>Guest List:</strong> Who are you inviting? (Rough number)</li>
@@ -334,11 +345,11 @@
                 const searchTerm = originalCommand.substring(13).trim();
                 if(searchTerm){
                     isHTMLResponse = true;
-                    response = `Global Search for "${searchTerm}":<ul>`;
-                    tasks.filter(t => t.title.toLowerCase().includes(searchTerm)).forEach(t => response += `<li>Task: ${t.title.substring(0,30)}...</li>`);
-                    mockPlaces.all.filter(p => p.name.toLowerCase().includes(searchTerm) || (p.tags && p.tags.includes(searchTerm))).forEach(p => response += `<li>Place: ${p.name.substring(0,30)}...</li>`);
-                    mockDeals.filter(d => d.title.toLowerCase().includes(searchTerm) || d.businessName.toLowerCase().includes(searchTerm)).forEach(d => response += `<li>Deal: ${d.title.substring(0,30)}...</li>`);
-                    mockChannels.filter(c => c.name.toLowerCase().includes(searchTerm)).forEach(c => response += `<li>Channel: ${c.name.substring(0,30)}...</li>`);
+                    response = `Global Search for "${LLOS_Escape.escapeHtml(searchTerm)}":<ul>`;
+                    tasks.filter(t => t.title.toLowerCase().includes(searchTerm)).forEach(t => response += `<li>Task: ${LLOS_Escape.escapeHtml(t.title.substring(0,30))}...</li>`);
+                    mockPlaces.all.filter(p => p.name.toLowerCase().includes(searchTerm) || (p.tags && p.tags.includes(searchTerm))).forEach(p => response += `<li>Place: ${LLOS_Escape.escapeHtml(p.name.substring(0,30))}...</li>`);
+                    mockDeals.filter(d => d.title.toLowerCase().includes(searchTerm) || d.businessName.toLowerCase().includes(searchTerm)).forEach(d => response += `<li>Deal: ${LLOS_Escape.escapeHtml(d.title.substring(0,30))}...</li>`);
+                    mockChannels.filter(c => c.name.toLowerCase().includes(searchTerm)).forEach(c => response += `<li>Channel: ${LLOS_Escape.escapeHtml(c.name.substring(0,30))}...</li>`);
                     response += `</ul><p><em>Clicking these would navigate to the item.</em></p>`;
                 } else {
                     response = "What would you like to search for globally?";
@@ -373,22 +384,22 @@
                 const pulseItems = Array.from(document.querySelectorAll('.nearby-pulse-carousel .story-label')).slice(0, 2).map(el => el.textContent);
                 isHTMLResponse = true;
                 response = "On your dashboard:<br>";
-                if (upcomingTasks.length > 0) response += `Top tasks: ${upcomingTasks.map(t=>t.title.substring(0,20)+"...").join(', ')}.<br>`;
+                if (upcomingTasks.length > 0) response += `Top tasks: ${upcomingTasks.map(t=>LLOS_Escape.escapeHtml(t.title.substring(0,20))+"...").join(', ')}.<br>`;
                 else response += "No pressing tasks visible on dashboard.<br>";
-                if (pulseItems.length > 0) response += `Nearby Pulse: ${pulseItems.join(' & ')}.<br>`;
-                response += `Weather: ${document.getElementById('currentWeather')?.textContent || 'N/A'}.<br>`;
+                if (pulseItems.length > 0) response += `Nearby Pulse: ${pulseItems.map(LLOS_Escape.escapeHtml).join(' & ')}.<br>`;
+                response += `Weather: ${LLOS_Escape.escapeHtml(document.getElementById('currentWeather')?.textContent || 'N/A')}.<br>`;
                 response += `<em>This is a brief summary.</em>`;
             } else if (command.includes("summarize my day") || command.includes("what's my day look like")) {
                 const incompleteTasks = tasks.filter(t => !t.completed);
                 isHTMLResponse = true;
                 if (incompleteTasks.length > 0) {
-                    response = `You have ${incompleteTasks.length} task${incompleteTasks.length > 1 ? 's' : ''} remaining, ${userName}. Key ones:<ul>`;
-                    incompleteTasks.slice(0,3).forEach(t => response += `<li>${t.title}</li>`);
+                    response = `You have ${incompleteTasks.length} task${incompleteTasks.length > 1 ? 's' : ''} remaining, ${LLOS_Escape.escapeHtml(userName)}. Key ones:<ul>`;
+                    incompleteTasks.slice(0,3).forEach(t => response += `<li>${LLOS_Escape.escapeHtml(t.title)}</li>`);
                     response += "</ul>";
                 } else {
                     response = "All tasks completed! Great job!";
                 }
-                response += `<br>Current weather: ${document.getElementById('currentWeather')?.textContent || 'N/A'}.`;
+                response += `<br>Current weather: ${LLOS_Escape.escapeHtml(document.getElementById('currentWeather')?.textContent || 'N/A')}.`;
             } else if (command.includes("event") || command.includes("happening")) {
                 const upcomingEvents = mockPlaces.events.slice(0,2).map(e => e.name).join(' and ');
                 response = upcomingEvents ? `Some upcoming events are: ${upcomingEvents}. Interested? I can show you the Explore tab.` : "I don't see any major events right now. Check the Explore tab for more!";
@@ -399,8 +410,8 @@
                     const kidFriendlyPlaces = mockPlaces.all.filter(p => p.tags && p.tags.includes("family"));
                     if (kidFriendlyPlaces.length > 0) {
                         isHTMLResponse = true;
-                        response = `For ${forWhom}, I'd suggest:<ul>`;
-                        kidFriendlyPlaces.slice(0,3).forEach(p => response += `<li>${p.name} (${p.type})</li>`);
+                        response = `For ${LLOS_Escape.escapeHtml(forWhom)}, I'd suggest:<ul>`;
+                        kidFriendlyPlaces.slice(0,3).forEach(p => response += `<li>${LLOS_Escape.escapeHtml(p.name)} (${LLOS_Escape.escapeHtml(p.type)})</li>`);
                         response += `</ul><p>You can search for "family" in Explore for more.</p>`;
                     } else {
                         response = `I don't have specific "family" tagged places right now, but you could try searching for "parks" or "playgrounds" in Explore.`;
@@ -416,8 +427,8 @@
                 const filteredDeals = mockDeals.filter(d => d.title.toLowerCase().includes(dealQuery) || d.category.toLowerCase().includes(dealQuery) || d.businessName.toLowerCase().includes(dealQuery));
                 if (filteredDeals.length > 0) {
                     isHTMLResponse = true;
-                    response = `Found these deals for "${dealQuery}":<ul>`;
-                    filteredDeals.slice(0,3).forEach(d => response += `<li>${d.title} at ${d.businessName}</li>`);
+                    response = `Found these deals for "${LLOS_Escape.escapeHtml(dealQuery)}":<ul>`;
+                    filteredDeals.slice(0,3).forEach(d => response += `<li>${LLOS_Escape.escapeHtml(d.title)} at ${LLOS_Escape.escapeHtml(d.businessName)}</li>`);
                     response += `</ul>Would you like to search for "${dealQuery}" in Explore Deals?`;
                     requiresFollowUpInResponse = true; 
                 } else {
@@ -486,7 +497,7 @@
                 const tomorrowsTasks = tasks.filter(t => t.dueDate === new Date(Date.now() + 86400000).toISOString().split('T')[0] && !t.completed);
                 if(tomorrowsTasks.length > 0){
                     isHTMLResponse = true;
-                    response = `For tomorrow, ${userName}, you have:<ul>${tomorrowsTasks.map(t => `<li>${t.title} (${t.time || 'anytime'})</li>`).join('')}</ul>`;
+                    response = `For tomorrow, ${LLOS_Escape.escapeHtml(userName)}, you have:<ul>${tomorrowsTasks.map(t => `<li>${LLOS_Escape.escapeHtml(t.title)} (${LLOS_Escape.escapeHtml(t.time || 'anytime')})</li>`).join('')}</ul>`;
                 } else {
                     response = "Looks like your schedule for tomorrow is clear so far!";
                 }
@@ -556,7 +567,7 @@
                 if (journalEntries.length > 0) {
                     const lastEntry = journalEntries[journalEntries.length - 1];
                     isHTMLResponse = true;
-                    response = `Analyzing your  journal entry ("${lastEntry.note.substring(0,20)}..."):<br> `;
+                    response = `Analyzing your  journal entry ("${LLOS_Escape.escapeHtml(lastEntry.note.substring(0,20))}..."):<br> `;
                     if (lastEntry.note.toLowerCase().includes("happy") || lastEntry.note.toLowerCase().includes("great")) response += "It seems you had a positive experience! ";
                     if (lastEntry.note.toLowerCase().includes("challenge") || lastEntry.note.toLowerCase().includes("difficult")) response += "It sounds like you overcame something. ";
                     if (lastEntry.note.toLowerCase().includes("learn") || lastEntry.note.toLowerCase().includes("discovered")) response += "Glad to see you're learning! ";
@@ -580,10 +591,10 @@
                 const channel = mockChannels.find(c => c.name.toLowerCase().includes(channelName.toLowerCase()));
                 if (channel && channel.messages && channel.messages.length > 0) {
                     isHTMLResponse = true;
-                    response = `Latest in "${channel.name}":<ul>`;
+                    response = `Latest in "${LLOS_Escape.escapeHtml(channel.name)}":<ul>`;
                     channel.messages.slice(-2).forEach(msg => {
                         const senderDetails = mockUsers[msg.senderId] || mockUsers.defaultBot;
-                        response += `<li><strong>${senderDetails.name}</strong>: ${msg.text.substring(0,30)}...</li>`
+                        response += `<li><strong>${LLOS_Escape.escapeHtml(senderDetails.name)}</strong>: ${LLOS_Escape.escapeHtml(msg.text.substring(0,30))}...</li>`
                     });
                     response += "</ul>";
                 } else if (channel) {
@@ -628,7 +639,7 @@
                 response = `I understand, ${userName}. How about some deep breaths? You can also try the Journaling feature in the Wellness Hub for reflection. Or I can use the device's voice to guide you.`;
             } else if (command.includes("help") || command.includes("what can you do")) {
                 isHTMLResponse = true;
-                response = `${contextMessage}I can help you with various tasks, ${userName}! Try things like:
+                response = `${contextMessage}I can help you with various tasks, ${LLOS_Escape.escapeHtml(userName)}! Try things like:
                     <ul>
                          <li>General: "hello", "time", "date", "weather", "tell me a joke", "global search [term]"</li>
                         <li>Planner: "add task Go to gym at 6pm on Friday", "clear completed tasks", "top 3 tasks", "what's my next task?" (when on planner)</li>

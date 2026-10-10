@@ -105,14 +105,14 @@
                         
                         article.innerHTML = `
                             <div class="bulletin-post-header">
-                                <img src="${author.avatarUrl}" alt="${author.name}" class="bulletin-post-avatar" loading="lazy">
+                                <img src="${LLOS_Escape.safeMediaUrl(author.avatarUrl)}" alt="${LLOS_Escape.escapeAttr(author.name)}" class="bulletin-post-avatar" loading="lazy">
                                 <div class="bulletin-post-meta">
-                                    <div class="name">${author.name}</div>
+                                    <div class="name">${LLOS_Escape.escapeHtml(author.name)}</div>
                                     <div class="timestamp">${new Date(item.timestamp).toLocaleString()}</div>
                                 </div>
                             </div>
-                            <h4 class="card-title" style="margin-bottom: var(--space-xs);">${item.title}</h4>
-                            <div class="bulletin-post-body">${item.content}</div>
+                            <h4 class="card-title" style="margin-bottom: var(--space-xs);">${LLOS_Escape.escapeHtml(item.title)}</h4>
+                            <div class="bulletin-post-body">${LLOS_Escape.escapeHtml(item.content)}</div>
                             <div class="bulletin-post-actions">${actionsHtml}</div>
                         `;
                         article.onclick = () => openBulletinCommentsModal(item.id);
@@ -129,11 +129,11 @@
                         if(item.discountPrice) priceHtml += `<span class="original-price">E${item.price.toFixed(2)}</span>`;
 
                         article.innerHTML = `
-                            <img src="${item.img}" alt="${item.title}" loading="lazy">
+                            <img src="${LLOS_Escape.safeMediaUrl(item.img)}" alt="${LLOS_Escape.escapeAttr(item.title)}" loading="lazy">
                             <div class="deal-info">
-                                <div class="name">${item.title}</div>
+                                <div class="name">${LLOS_Escape.escapeHtml(item.title)}</div>
                                 <div class="details">${priceHtml}</div>
-                                <div class="business">${item.businessName}</div>
+                                <div class="business">${LLOS_Escape.escapeHtml(item.businessName)}</div>
                                 ${expiryText}
                             </div>
                         `;
@@ -143,17 +143,17 @@
                         article.onkeypress = (event) => { if(event.key === 'Enter' || event.key === ' ') showPlaceDetail(item); };
                         let tagsHtml = "";
                         if(item.tags && item.tags.length > 0) {
-                            tagsHtml = `<div class="tags">${item.tags.slice(0,3).map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>`;
+                            tagsHtml = `<div class="tags">${item.tags.slice(0,3).map(tag => `<span class="tag">#${LLOS_Escape.escapeHtml(tag)}</span>`).join('')}</div>`;
                         }
                         article.innerHTML = `
-                            <img src="${item.img}" alt="${item.name}" loading="lazy">
+                            <img src="${LLOS_Escape.safeMediaUrl(item.img)}" alt="${LLOS_Escape.escapeAttr(item.name)}" loading="lazy">
                             <div class="place-info">
-                                <div class="name">${item.name}</div>
-                                <div class="details">${item.details}</div>
-                                <div class="details">${item.sub || ''}</div>
+                                <div class="name">${LLOS_Escape.escapeHtml(item.name)}</div>
+                                <div class="details">${LLOS_Escape.escapeHtml(item.details)}</div>
+                                <div class="details">${LLOS_Escape.escapeHtml(item.sub || '')}</div>
                                 ${tagsHtml}
                             </div>
-                            <button class="save-place-button ${item.saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSavePlace(${item.id}, this)" aria-label="${item.saved ? 'Unsave' : 'Save'} ${item.name}" aria-pressed="${item.saved ? 'true' : 'false'}">
+                            <button class="save-place-button ${item.saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSavePlace(${item.id}, this)" aria-label="${item.saved ? 'Unsave' : 'Save'} ${LLOS_Escape.escapeAttr(item.name)}" aria-pressed="${item.saved ? 'true' : 'false'}">
                                 <i class="fas fa-bookmark"></i>
                             </button>
                         `;
@@ -198,11 +198,11 @@
         document.getElementById('modalPlaceName').textContent = place.name;
         document.getElementById('modalPlaceImage').src = place.img;
         document.getElementById('modalPlaceImage').alt = place.name;
-        document.getElementById('modalPlaceDetails').innerHTML = `<p>${place.details}</p><p>${place.sub}</p>`;
+        document.getElementById('modalPlaceDetails').innerHTML = `<p>${LLOS_Escape.escapeHtml(place.details)}</p><p>${LLOS_Escape.escapeHtml(place.sub)}</p>`;
         const tagsContainer = document.getElementById('modalPlaceTags');
         if (tagsContainer) {
             if (place.tags && place.tags.length > 0) {
-                tagsContainer.innerHTML = place.tags.map(tag => `<span class="tag">#${tag}</span>`).join('');
+                tagsContainer.innerHTML = place.tags.map(tag => `<span class="tag">#${LLOS_Escape.escapeHtml(tag)}</span>`).join('');
                 tagsContainer.classList.remove('hidden');
             } else {
                 tagsContainer.innerHTML = '';
@@ -214,7 +214,7 @@
             let enhancedSummary = place.aiSummary;
             if (place.rating > 4.5 && aiLearningPreferences.learnSavedPlaces) enhancedSummary += " Many consider this a top-tier local spot.";
             else if (place.rating < 3.5 && aiLearningPreferences.learnSavedPlaces) enhancedSummary += " Reviews suggest some mixed experiences here.";
-            aiSummaryEl.innerHTML = `<i class="fas fa-brain"></i> <strong>AI Summary:</strong> ${enhancedSummary}`;
+            aiSummaryEl.innerHTML = `<i class="fas fa-brain"></i> <strong>AI Summary:</strong> ${LLOS_Escape.escapeHtml(enhancedSummary)}`;
             aiSummaryEl.classList.remove('hidden');
         } else if (aiSummaryEl) {
             aiSummaryEl.classList.add('hidden');
@@ -320,7 +320,7 @@
                     title: "A Perfect Rainy Afternoon",
                     text: `1. Catch a movie at '${cinema.name}'. 2. Then, warm up with a specialty coffee nearby at '${cafe.name}'.`,
                     buttonText: "View Itinerary",
-                    action: () => openGenericModal("AI Itinerary: Rainy Afternoon", `<p>Here is your suggested plan:</p><ul><li><strong>Step 1:</strong> Visit <strong>${cinema.name}</strong>.</li><li><strong>Step 2:</strong> Warm up at <strong>${cafe.name}</strong>.</li></ul><p class="mt-2 card-subtitle">I've checked and both are open now. I can add these to your planner if you'd like.</p>`)
+                    action: () => openGenericModal("AI Itinerary: Rainy Afternoon", `<p>Here is your suggested plan:</p><ul><li><strong>Step 1:</strong> Visit <strong>${LLOS_Escape.escapeHtml(cinema.name)}</strong>.</li><li><strong>Step 2:</strong> Warm up at <strong>${LLOS_Escape.escapeHtml(cafe.name)}</strong>.</li></ul><p class="mt-2 card-subtitle">I've checked and both are open now. I can add these to your planner if you'd like.</p>`)
                 };
             }
         } else if (new Date().getDay() >= 5 && new Date().getHours() > 15) {

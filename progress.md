@@ -1,8 +1,113 @@
-﻿## Last Updated: 2026-10-07
-## Session: 9 of estimated 60
-## Trace ID: phase3-batch-b
+﻿## Last Updated: 2026-10-08
+## Session: 10 of estimated 60
+## Trace ID: phase5b-parallel
 
-### Completed (new this session — PHASE 3 BATCH B)
+### Completed (new this session — PHASE 5B: XSS hardening + entrypoint)
+- **Feature 30 XSS hardening DONE + verified**: `public/lib/escape.js`
+  (escapeHtml/escapeAttr/escapeJsSingle/safeMediaUrl) +1 script tag; ~186 wrap
+  sites across 10 modules; admin-panel 4 onclick→data-attributes (0 onclick
+  interpolations remain); 8/8 vm-sandbox tests (malicious inert, benign
+  byte-identical). One justified behavior note: community AI "Yes, Add Task"
+  button now renders inert.
+- **Test-sandbox fix**: `load-classic.mjs` preloads the real shims — the 18
+  ai-modules/db-pro failures are gone.
+- **Full suite: 122 pass, 0 fail, 3 skip** (all needs-DB) + build clean.
+- **Entrypoint unification DONE + verified** (server/server.mjs + static.mjs,
+  9/9 tests, boot proof, Dockerfile + serve aligned).
+- **New ticket**: global `showToast` called ~190× but never defined — any toast
+  path throws ReferenceError (pre-existing, needs design, not fixed here).
+- Git normalized: mixed staged/unstaged resolved, safety stash dropped after
+  backup ref, checkpoint committed.
+
+### Completed (new this session — PHASE 5 BATCH A: infra)
+- **Docker**: multi-stage `Dockerfile` (build → slim runtime, healthcheck on
+  /api/v1/health, CMD api.mjs) + `.dockerignore` (.env never copied).
+- **CI** (`.github/workflows/ci.yml`): typecheck → test → build → secret-scan
+  (value-shaped key patterns; placeholder names allow-listed) → audit warn-only;
+  live-DB job gated on secrets.DATABASE_URL, skips gracefully.
+- **PWA shell**: manifest (palette-matched tokens), vanilla SW (llos-v1,
+  shell precache, cache-first static, network-first weather 60s), register
+  script — index.html +2 tags, still zero inline scripts. Build verified, all
+  three assets in dist/.
+- **Known gaps (tickets)**: icon-192/512 PNGs missing (install prompt won't fire);
+  neither entrypoint serves API+static together (api.mjs=API only,
+  serve.mjs=static+weather proxy — needs unification or reverse proxy);
+  secret-scan will fail builds with VITE_GOOGLE_MAPS_API_KEY set (intended
+  tripwire; local dist/ currently bakes the real key — dist/ is gitignored).
+- **Security audit** (read-only, no diff): no eval/Function/document.write/outerHTML
+  anywhere; admin panel already escapes via `h()` + textContent inspect pane
+  (wrap-only fix correctly skipped); uploads.mjs re-checked (allow-list, 5MB on
+  decoded bytes, sanitization, containment — no hole); keys/RBAC/SSRF/rate-limit
+  pass (details in worker report).
+- **Sequencing constraint discovered**: ~20 unescaped user-controlled innerHTML
+  sites in public/modules (community, enhancements, explore, misc) — self-XSS
+  today (mock/IndexedDB sources) but MUST be hardened with a shared escapeHtml
+  before client↔server wiring turns them into stored XSS. Plus one admin-panel
+  `onclick` JS-string-context ticket (#7) needing data-attributes.
+- **AI proxy** (`server/plugins/ai-proxy.mjs`, NEW, registered): `POST /api/v1/ai/chat`
+  (auth, 400 validation, 20-msg/4000-char caps), OpenAI-compatible via native
+  fetch (15s timeout, env URL/model/key), system prompt from user settings.
+  Fallback guarantee: no key/error/timeout → deterministic heuristic + `fallback:true`,
+  never 500s. Per-user daily quota (default 100, in-memory until live DB), 429 +
+  `fallbackAvailable:true`.
+- **Admin AI console** (`server/plugins/admin-ai.mjs`, NEW, registered): stats
+  (key as boolean only), per-user memory view/clear (audited), config patch
+  (audited, validated). Reads: admin roles; mutations: super_admin/admin.
+  All degrade-open without DB.
+- **Tests** (`tests/unit/phase4b.test.mjs`): 28 pass + 1 skip. Combined suites:
+  64 pass, 0 fail (phase4b 28 + prior 36).
+- Gates: node --check clean, vite build clean.
+- Note: live LLM call untested (no AI_API_KEY) — verified path is the fallback,
+  the plan's core guarantee. WS upgrade + push notifications remain.
+
+### Completed (new this session — PHASE 4 BATCH A: REST-first realtime)
+- **Chat realtime** (`server/plugins/chat-realtime.mjs`, NEW): channel delta-fetch
+  (`GET /api/v1/channels/:id/messages?since=&limit=`, cap 100, 400 on bad since),
+  read receipts (`POST .../read` → `channelRead.<id>` in settings payload, no migration),
+  unread counts (`GET .../unread`), in-memory presence/typing (30s TTL sweep,
+  pure helpers exported). Reads/presence unaudited (ephemeral, like settings).
+- **Admin chat controls** (`server/plugins/admin-chat.mjs`, NEW, registered):
+  message soft-hide (`DELETE .../messages/:id` → placeholder + version bump),
+  channel mute/unmute (`app_config` `muted.<channelId>`, enforced as 403 on
+  messages POST, fail-open without DB). All audited with before/after.
+- **Tests** (`tests/unit/phase4a.test.mjs`): 21 tests, 20 pass + 1 skip
+  (muted-403 needs DB). Combined suites: 36 pass, 0 fail, 2 skip.
+- Gates: node --check clean (4 files), vite build clean (3.03s).
+- Deferred: WebSocket upgrade (needs @fastify/websocket — not installed, no new
+  deps added without approval); server AI proxy (next batch).
+
+### Completed (new this session — PHASE 3 BATCH C)
+- **Legacy localStorage migration** (worker 1): all 83+ direct `localStorage.`
+  touches in `public/modules/*` (10 files incl. enhancements.js LS alias) now
+  route through offline-cache — new classic-script shim
+  `public/lib/offline-cache-global.js` (`window.LLOS_Cache`, 1 script tag before
+  state.js). Zero behavior change: no keys renamed, no formats changed.
+  Verified: 0 `localStorage.` matches, node --check on all 10 files + shim, vite build clean.
+- **Channels ownership fix** (`server/plugins/entities.mjs`): `ownershipCol` map
+  (channels→createdBy, rest→userId) in list/count/ownership/create; admin
+  entities list filters channels by createdBy. Code-verified; live-DB E2E pending.
+- **Admin Entities tab** (`server/admin-panel.html`, vanilla): 14-entity dropdown,
+  q/userId/status search, inspect, JSON override-edit, suspend/restore
+  (deals+bulletins), deals approve/reject, sync-health badges. Code-complete;
+  live test needs DB.
+- **Uploads endpoint** (`server/plugins/uploads.mjs`, JSON base64, no new deps):
+  png/jpeg/webp/gif allow-list, 5MB cap, traversal-safe names,
+  uploads/<userId>/<uuid>-<name>, S3-swap comment. Inject-verified: unauth→401,
+  GET unknown→404. Authed upload needs DB.
+- **Seed completion**: sleep/messages/notifications/trustedContacts/applets/
+  integratedApps added; duplicate `import {sql}` removed; channel `createdBy` set.
+  Never run (no live DB).
+- **Test runner fix**: `npm test` → `node --test --test-force-exit`; new
+  `tests/unit/offline-sync.test.mjs` (4/4 pass, static style, no DB).
+- Gates this session: 16 pass + 1 skip (batch-b 12+1, sync 4), build clean
+  (781ms). eslint still hangs in this env — node --check used instead.
+- Housekeeping: README stack/commands updated; .env gained local-dev DB defaults
+  (DATABASE_URL → docker-compose Postgres); migration chain verified coherent
+  (0000 7 tables + 0001 all 14 entities, journal in order).
+- Environments without Docker (this machine): live migrate+seed still blocked —
+  run `docker compose up -d && npm run db:migrate && npm run seed` where Docker exists.
+
+### Completed (prior — PHASE 3 BATCH B)
 - **Validation lib** (`server/lib/validation.mjs`): per-entity JSON-Schema-style
   schemas (required fields, enums, ranges) for all 14 entities; entity CRUD
   now returns 400 + human-readable `details` on failure.

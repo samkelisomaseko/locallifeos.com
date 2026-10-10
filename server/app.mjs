@@ -12,6 +12,12 @@ import adminEntitiesPlugin from './plugins/admin-entities.mjs';
 import weatherPlugin from './plugins/weather.mjs';
 import profileSettingsPlugin from './plugins/profile-settings.mjs';
 import entitiesPlugin from './plugins/entities.mjs';
+import chatRealtimePlugin from './plugins/chat-realtime.mjs';
+import adminChatPlugin from './plugins/admin-chat.mjs';
+import aiProxyPlugin from './plugins/ai-proxy.mjs';
+import adminAiPlugin from './plugins/admin-ai.mjs';
+import uploadsPlugin from './plugins/uploads.mjs';
+import { registerStatic } from './static.mjs';
 import { hashPassword } from './lib/crypto.mjs';
 import { requireAuth, requireRole } from './middleware/auth.mjs';
 import { eq, sql } from 'drizzle-orm';
@@ -74,6 +80,8 @@ export async function buildApp(opts = {}) {
   await app.register(adminConfigPlugin);
   await app.register(adminPanelPlugin);
   await app.register(adminEntitiesPlugin);
+  await app.register(adminChatPlugin);
+  await app.register(adminAiPlugin);
 
   // ── User routes (auth-gated inside each plugin) ────────────────
   await app.register(weatherPlugin);
@@ -81,6 +89,15 @@ export async function buildApp(opts = {}) {
 
   // ── Entity CRUD routes (auth + ownership-gated) ────────────────
   await app.register(entitiesPlugin);
+
+  // ── Phase 4A: REST-first realtime foundations for chat ────────────
+  await app.register(chatRealtimePlugin);
+
+  // ── Phase 4B: User AI proxy (always answers; heuristic fallback) ──────
+  await app.register(aiProxyPlugin);
+
+  // ── Local-disk uploads (auth-gated; S3 swap documented in plugin)
+  await app.register(uploadsPlugin);
 
   // ── Health check (public — mask internal details) ──────────────
   app.get('/api/v1/health', async () => {
@@ -141,6 +158,15 @@ export async function buildApp(opts = {}) {
     await seedDemoUser();
   } catch (err) {
     app.log.warn({ err: err.message }, 'Demo user seed skipped (DB may be unavailable)');
+  }
+
+  // ── Unified production entrypoint: dist/ static + SPA fallback ───
+  // Opt-in via opts.serveStatic so standalone API mode (server/api.mjs)
+  // and existing inject tests keep exact-404 semantics unless enabled.
+  // Registered routes (/api/*, /admin*, /uploads/*) always take precedence:
+  // the static handler only runs when no route matched.
+  if (opts.serveStatic) {
+    await registerStatic(app, { distDir: opts.staticDir });
   }
 
   return app;

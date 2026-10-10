@@ -11,8 +11,8 @@
   // ---------- Lightweight DB (falls back to localStorage) ----------
   const DB_PRO = window.DB_PRO || (function(){
     const ns = "locallife-db";
-    const read = () => JSON.parse(localStorage.getItem(ns) || "{}");
-    const write = (o) => localStorage.setItem(ns, JSON.stringify(o));
+    const read = () => JSON.parse(LLOS_Cache.rawGet(ns) || "{}");
+    const write = (o) => LLOS_Cache.rawSet(ns, JSON.stringify(o));
     return {
       async getAll(store){ const db = read(); return Object.values(db[store]||{}); },
       async get(store, id){ const db = read(); return (db[store]||{})[id]||null; },
@@ -125,7 +125,7 @@
 
   // Bulletin: owner-only edit/delete
   const currentUser = (function(){
-    try { return JSON.parse(localStorage.getItem("currentUser")||"{}"); } catch(e){ return {}; }
+    try { return JSON.parse(LLOS_Cache.rawGet("currentUser")||"{}"); } catch(e){ return {}; }
   })();
   attachLongPress(".bulletin-card", (el)=>{
     const id = el.dataset.id || Math.random().toString(36).slice(2);
@@ -178,8 +178,8 @@
       sw.setAttribute("aria-checked", !!on);
       document.documentElement.dataset.privacySandbox = on ? "on" : "off";
     };
-    apply(localStorage.getItem(key)==="1");
-    const toggle = ()=>{ const v = sw.classList.toggle("on"); localStorage.setItem(key, v?"1":"0"); apply(v); toast(v?"Sandbox ON":"Sandbox OFF"); };
+    apply(LLOS_Cache.rawGet(key)==="1");
+    const toggle = ()=>{ const v = sw.classList.toggle("on"); LLOS_Cache.rawSet(key, v?"1":"0"); apply(v); toast(v?"Sandbox ON":"Sandbox OFF"); };
     sw.addEventListener("click", toggle); sw.addEventListener("keydown", (e)=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggle(); }});
 
     // Export sheet
@@ -203,8 +203,8 @@
           tasks: await DB_PRO.getAll("tasks"),
           goals: await DB_PRO.getAll("goals"),
           nutrition: await DB_PRO.getAll("nutrition"),
-          focusSessions: JSON.parse(localStorage.getItem("focusSessions")||"[]"),
-          exercises: JSON.parse(localStorage.getItem("mindfulnessProgress")||"{}"),
+          focusSessions: JSON.parse(LLOS_Cache.rawGet("focusSessions")||"[]"),
+          exercises: JSON.parse(LLOS_Cache.rawGet("mindfulnessProgress")||"{}"),
         };
         if(fmt==="json"){
           const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
@@ -363,8 +363,8 @@
       ring.style.setProperty("--p", Math.max(0, Math.min(1,p))*360+"deg");
       pct.textContent = Math.round(Math.max(0, Math.min(1,p))*100) + "%";
     }
-    function loadHistory(){ return JSON.parse(localStorage.getItem("focusSessions")||"[]"); }
-    function saveHistory(arr){ localStorage.setItem("focusSessions", JSON.stringify(arr)); }
+    function loadHistory(){ return JSON.parse(LLOS_Cache.rawGet("focusSessions")||"[]"); }
+    function saveHistory(arr){ LLOS_Cache.rawSet("focusSessions", JSON.stringify(arr)); }
     function refreshStats(){
       const arr = loadHistory();
       const total = arr.reduce((s,a)=> s+a.mins,0);
@@ -435,8 +435,8 @@
     const stopBtn = host.querySelector("#mindStop");
 
     function say(text){ const u = new SpeechSynthesisUtterance(text); u.rate=1; u.pitch=1; synth.speak(u); }
-    function saveProgress(step){ const p = JSON.parse(localStorage.getItem("mindfulnessProgress")||"{}"); const lvl=levelEl.value; p[lvl]=(p[lvl]||0)+step; localStorage.setItem("mindfulnessProgress", JSON.stringify(p)); renderProgress(); }
-    function renderProgress(){ const p = JSON.parse(localStorage.getItem("mindfulnessProgress")||"{}"); progEl.textContent = "Progress — Easy: "+(p.easy||0)+", Standard: "+(p.standard||0)+", Intense: "+(p.intense||0); }
+    function saveProgress(step){ const p = JSON.parse(LLOS_Cache.rawGet("mindfulnessProgress")||"{}"); const lvl=levelEl.value; p[lvl]=(p[lvl]||0)+step; LLOS_Cache.rawSet("mindfulnessProgress", JSON.stringify(p)); renderProgress(); }
+    function renderProgress(){ const p = JSON.parse(LLOS_Cache.rawGet("mindfulnessProgress")||"{}"); progEl.textContent = "Progress — Easy: "+(p.easy||0)+", Standard: "+(p.standard||0)+", Intense: "+(p.intense||0); }
     renderProgress();
 
     playBtn.addEventListener("click", async ()=>{
@@ -549,7 +549,7 @@
       render(res);
     }
     host.addEventListener("click", (e)=>{
-      const chip = e.target.closest(".filter-chip"); if(chip){ chip.classList.toggle("on"); localStorage.setItem("market.filter."+chip.dataset.f, chip.classList.contains("on")?"1":"0"); applyFilters(); }
+      const chip = e.target.closest(".filter-chip"); if(chip){ chip.classList.toggle("on"); LLOS_Cache.rawSet("market.filter."+chip.dataset.f, chip.classList.contains("on")?"1":"0"); applyFilters(); }
       const b = e.target.closest("button.btn");
       if(b && b.dataset.action==="view"){
         const it = data.find(x=> x.id===b.dataset.id);
@@ -566,7 +566,7 @@
     });
     host.querySelector("#mkSearch").addEventListener("input", applyFilters);
     // restore chip state
-    host.querySelectorAll(".filter-chip").forEach(ch=> ch.classList.toggle("on", localStorage.getItem("market.filter."+ch.dataset.f)==="1"));
+    host.querySelectorAll(".filter-chip").forEach(ch=> ch.classList.toggle("on", LLOS_Cache.rawGet("market.filter."+ch.dataset.f)==="1"));
     applyFilters();
   })();
 
@@ -585,7 +585,7 @@
 
     // Smart filter: if time is evening, auto-enable "Open now" in marketplace
     const hour = new Date().getHours();
-    if(hour>=18 || hour<=7){ localStorage.setItem("market.filter.open","1"); }
+    if(hour>=18 || hour<=7){ LLOS_Cache.rawSet("market.filter.open","1"); }
   })();
 
   // ---------- Performance tweaks ----------
@@ -632,9 +632,9 @@
     async put(store, value){
       if(!AIMemory.db){
         const key = `mem:${store}`;
-        const arr = JSON.parse(localStorage.getItem(key)||"[]");
+        const arr = JSON.parse(LLOS_Cache.rawGet(key)||"[]");
         value.id = value.id || (arr.length? (arr[arr.length-1].id+1):1);
-        arr.push(value); localStorage.setItem(key, JSON.stringify(arr)); return value.id;
+        arr.push(value); LLOS_Cache.rawSet(key, JSON.stringify(arr)); return value.id;
       }
       return await new Promise((res, rej)=>{
         const tx = AIMemory.db.transaction(store, "readwrite");
@@ -644,7 +644,7 @@
     },
     async all(store){
       if(!AIMemory.db){
-        return JSON.parse(localStorage.getItem(`mem:${store}`)||"[]");
+        return JSON.parse(LLOS_Cache.rawGet(`mem:${store}`)||"[]");
       }
       return await new Promise((res, rej)=>{
         const tx = AIMemory.db.transaction(store, "readonly");
@@ -656,8 +656,8 @@
     async del(store, id){
       if(!AIMemory.db){
         const key = `mem:${store}`;
-        const arr = JSON.parse(localStorage.getItem(key)||"[]").filter(x=> x.id!==id);
-        localStorage.setItem(key, JSON.stringify(arr)); return;
+        const arr = JSON.parse(LLOS_Cache.rawGet(key)||"[]").filter(x=> x.id!==id);
+        LLOS_Cache.rawSet(key, JSON.stringify(arr)); return;
       }
       return await new Promise((res, rej)=>{
         const tx = AIMemory.db.transaction(store, "readwrite");
@@ -760,8 +760,8 @@
   // ---------- Automations: time / (optional) place triggers ----------
   const AIAutomation = {
     key:"ai.automations",
-    get(){ return JSON.parse(localStorage.getItem(this.key)||"[]"); },
-    set(v){ localStorage.setItem(this.key, JSON.stringify(v)); },
+    get(){ return JSON.parse(LLOS_Cache.rawGet(this.key)||"[]"); },
+    set(v){ LLOS_Cache.rawSet(this.key, JSON.stringify(v)); },
     toggle(id,on){
       const list = this.get(); const i = list.findIndex(a=>a.id===id);
       if(i>-1){ list[i].enabled = on; this.set(list); this.renderToggles(); }
@@ -790,7 +790,7 @@
         }
         // Simple place trigger (uses stored "lastPlace" key set elsewhere)
         if(a.type==="place"){
-          const here = localStorage.getItem("geo.lastPlace");
+          const here = LLOS_Cache.rawGet("geo.lastPlace");
           if(here && a.place && here===a.place){
             this.execute(a);
           }
@@ -923,7 +923,7 @@
       }));
       const wipe = mount.querySelector("#memWipe");
       wipe && wipe.addEventListener("click", async ()=>{
-        ["chats","tasks","places","links","moods"].forEach(k=> localStorage.removeItem("mem:"+k));
+        ["chats","tasks","places","links","moods"].forEach(k=> LLOS_Cache.rawRemove("mem:"+k));
         const db = AIMemory.db;
         if(db){
           await Promise.all(["chats","tasks","places","links","moods"].map(store=> new Promise((res)=>{

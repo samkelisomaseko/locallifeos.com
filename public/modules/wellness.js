@@ -16,11 +16,11 @@
         let allHabitsDone = habits.length > 0 && habits.every(h => h.current >= h.goal);
         if(aiWellnessInsightEl && aiLearningPreferences.learnHabitTracking){
             if(allHabitsDone){
-                aiWellnessInsightEl.innerHTML = `<i class="fas fa-brain"></i> AI: Amazing, ${userName}! You've completed all your habits for today! 🎉 Consider setting a new challenge or enjoying your progress.`;
+                aiWellnessInsightEl.innerHTML = `<i class="fas fa-brain"></i> AI: Amazing, ${LLOS_Escape.escapeHtml(userName)}! You've completed all your habits for today! 🎉 Consider setting a new challenge or enjoying your progress.`;
                 aiWellnessInsightEl.classList.remove('hidden');
             } else if (habits.some(h => h.streak > 5)) {
                 const highStreakHabit = habits.find(h => h.streak > 5);
-                aiWellnessInsightEl.innerHTML = `<i class="fas fa-brain"></i> AI: You're on a great ${highStreakHabit.streak}-day streak with "${highStreakHabit.name.substring(0,20)}..."! Keep up the momentum!`;
+                aiWellnessInsightEl.innerHTML = `<i class="fas fa-brain"></i> AI: You're on a great ${highStreakHabit.streak}-day streak with "${LLOS_Escape.escapeHtml(highStreakHabit.name.substring(0,20))}..."! Keep up the momentum!`;
                 aiWellnessInsightEl.classList.remove('hidden');
             } else if(sleepData.length > 0) {
                 const lastSleep = sleepData[sleepData.length -1];
@@ -51,12 +51,12 @@
                     if (habit.isWaterTracker) {
                         extraControls = `
                         <div class="water-tracker-buttons">
-                            <button class="button button-secondary water-add-button" onclick="incrementWater(${habit.id}, 1)">+1 ${habit.unit || 'glass'}</button>
-                            <button class="button button-secondary water-add-button" onclick="incrementWater(${habit.id}, 2)">+2 ${habit.unit || 'glass'}</button>
+                            <button class="button button-secondary water-add-button" onclick="incrementWater(${habit.id}, 1)">+1 ${LLOS_Escape.escapeHtml(habit.unit || 'glass')}</button>
+                            <button class="button button-secondary water-add-button" onclick="incrementWater(${habit.id}, 2)">+2 ${LLOS_Escape.escapeHtml(habit.unit || 'glass')}</button>
                         </div>`;
                     }
                     habitEl.innerHTML = `
-                        <button class="progress-ring-button ${habit.current >= habit.goal ? 'completed' : ''}" onclick="toggleHabitProgress(${habit.id})" aria-label="Update progress for ${habit.name}">
+                        <button class="progress-ring-button ${habit.current >= habit.goal ? 'completed' : ''}" onclick="toggleHabitProgress(${habit.id})" aria-label="Update progress for ${LLOS_Escape.escapeAttr(habit.name)}">
                             <svg width="56" height="56" viewBox="0 0 52 52" aria-hidden="true">
                                 <circle cx="26" cy="26" r="24" fill="transparent" stroke="${document.body.classList.contains('dark-mode') ? 'var(--warm-gray)' : 'var(--placeholder-bg)'}" stroke-width="4"/>
                                 <circle class="progress-ring-circle" cx="26" cy="26" r="24" fill="transparent" stroke="${habit.color}" stroke-width="4" transform="rotate(-90 26 26)" style="stroke-dashoffset: ${circumference * (1 - Math.min(progress,1))};"/>
@@ -64,7 +64,7 @@
                             <i class="fas fa-check completion-check" aria-hidden="true"></i>
                         </button>
                         <div class="habit-info">
-                            <div class="habit-name"><i class="${habit.icon}" style="color:${habit.color}; margin-right:8px;"></i>${habit.name}</div>
+                            <div class="habit-name"><i class="${habit.icon}" style="color:${habit.color}; margin-right:8px;"></i>${LLOS_Escape.escapeHtml(habit.name)}</div>
                             <div class="habit-meta">
                                 <span class="habit-streak"><i class="fas fa-fire"></i> ${habit.streak} day${habit.streak !== 1 ? 's' : ''}</span>
                                 <span class="habit-progress-info">${habit.current}/${habit.goal} ${habit.unit || ''}</span>
@@ -72,8 +72,8 @@
                             ${extraControls}
                         </div>
                         <div class="habit-actions">
-                            <button class="habit-action-button edit" onclick="openEditHabitModal(${habit.id})" aria-label="Edit habit: ${habit.name}"><i class="fas fa-pencil-alt"></i></button>
-                            <button class="habit-action-button delete" onclick="deleteHabit(${habit.id})" aria-label="Delete habit: ${habit.name}"><i class="fas fa-times"></i></button>
+                            <button class="habit-action-button edit" onclick="openEditHabitModal(${habit.id})" aria-label="Edit habit: ${LLOS_Escape.escapeAttr(habit.name)}"><i class="fas fa-pencil-alt"></i></button>
+                            <button class="habit-action-button delete" onclick="deleteHabit(${habit.id})" aria-label="Delete habit: ${LLOS_Escape.escapeAttr(habit.name)}"><i class="fas fa-times"></i></button>
                         </div>
                     `;
                     habitListContainerEl.appendChild(habitEl);
@@ -240,7 +240,7 @@
              setTimeout(() => {
                 openConfirmationModal(
                     "AI Wellness Copilot",
-                    `<p>I see you're feeling down, ${userName}. It can be helpful to write down what's on your mind.</p><p>Would you like to open a journal entry?</p>`,
+                    `<p>I see you're feeling down, ${LLOS_Escape.escapeHtml(userName)}. It can be helpful to write down what's on your mind.</p><p>Would you like to open a journal entry?</p>`,
                     () => {
                         openJournalModal(null, true);
                     }
@@ -275,7 +275,7 @@
                 }
             });
             if (daysWithJog.size > 1 && (correlationCount / daysWithJog.size) >= 0.75) {
-                patternText.innerHTML = `On days you complete your '<strong>${jogHabit.name}</strong>' habit, you are <strong>75% more likely</strong> to log a positive mood. Keep up the great work!`;
+                patternText.innerHTML = `On days you complete your '<strong>${LLOS_Escape.escapeHtml(jogHabit.name)}</strong>' habit, you are <strong>75% more likely</strong> to log a positive mood. Keep up the great work!`;
                 patternCard.style.display = 'block';
                 return;
             }
@@ -285,7 +285,7 @@
             if (lastSleep && lastSleep.sleep < 6) {
                 const recentSadMood = loggedMoods.find(m => ['😞', '🙁'].includes(m.mood) && new Date(m.timestamp).toDateString() === new Date(lastSleep.timestamp).toDateString());
                 if (recentSadMood) {
-                    patternText.innerHTML = `I noticed you logged <strong>less than 6 hours of sleep</strong> and also felt <strong>${recentSadMood.mood}</strong>. Quality sleep is key to well-being. Consider a relaxing activity before bed.`;
+                    patternText.innerHTML = `I noticed you logged <strong>less than 6 hours of sleep</strong> and also felt <strong>${LLOS_Escape.escapeHtml(recentSadMood.mood)}</strong>. Quality sleep is key to well-being. Consider a relaxing activity before bed.`;
                     patternCard.style.display = 'block';
                     return;
                 }
@@ -583,7 +583,7 @@
         });
         
         lastSleepLogDate = new Date().toDateString();
-        localStorage.setItem('lastSleepLogDate', lastSleepLogDate);
+        LLOS_Cache.rawSet('lastSleepLogDate', lastSleepLogDate);
         showToast("Sleep and screen data logged. AI will analyze patterns.", "success");
         sleepInput.value = '';
         screenInput.value = '';
@@ -595,7 +595,7 @@
         const summaryBody = document.getElementById('aiWellnessSummaryBody');
         if (!summaryBody) return;
 
-        let summaryHtml = `<p class="card-subtitle mb-3">Here's a professional breakdown of your recent wellness data, ${userName}:</p>`;
+        let summaryHtml = `<p class="card-subtitle mb-3">Here's a professional breakdown of your recent wellness data, ${LLOS_Escape.escapeHtml(userName)}:</p>`;
         
         let statsCards = '';
         const positiveMoods = loggedMoods.filter(m => ['🙂', '😄', '🤩', '😌'].includes(m.mood)).length;
@@ -647,17 +647,17 @@
             items.push({ type: 'habit', data: habit, timestamp: new Date() });
         });
         if (items.length === 0) {
-            moodHabitTimelineEl.innerHTML = `<p class="card-subtitle" style="width:100%; text-align:center;">No entries yet for today, ${userName}.</p>`;
+            moodHabitTimelineEl.innerHTML = `<p class="card-subtitle" style="width:100%; text-align:center;">No entries yet for today, ${LLOS_Escape.escapeHtml(userName)}.</p>`;
             return;
         }
         items.sort((a, b) => a.timestamp - b.timestamp).forEach(item => {
             const card = document.createElement('div');
             card.className = 'timeline-card';
             if (item.type === 'mood') {
-                card.innerHTML = `<div class="icon">${item.data.mood}</div><div class="title">${item.data.type === 'journal' ? 'Journal Entry' : 'Mood Log'}</div><div class="time">${item.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
+                card.innerHTML = `<div class="icon">${LLOS_Escape.escapeHtml(item.data.mood)}</div><div class="title">${item.data.type === 'journal' ? 'Journal Entry' : 'Mood Log'}</div><div class="time">${item.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
                 card.onclick = () => openJournalModal(item.data);
             } else if (item.type === 'habit') {
-                card.innerHTML = `<div class="icon" style="color:${item.data.color};"><i class="${item.data.icon}"></i></div><div class="title">${item.data.name.substring(0, 15)}...</div><div class="time">Completed Today</div>`;
+                card.innerHTML = `<div class="icon" style="color:${item.data.color};"><i class="${item.data.icon}"></i></div><div class="title">${LLOS_Escape.escapeHtml(item.data.name.substring(0, 15))}...</div><div class="time">Completed Today</div>`;
                 card.onclick = () => openEditHabitModal(item.data.id);
             }
             moodHabitTimelineEl.appendChild(card);

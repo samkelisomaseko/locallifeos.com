@@ -92,7 +92,7 @@
         document.getElementById('profileLocationInput').value = user.location || '';
         document.getElementById('profileBioInput').value = user.bio;
         document.getElementById('profileInterestsInput').value = user.interests || '';
-        document.getElementById('profileEmailInput').value = localStorage.getItem('userEmail') || 'test@example.com';
+        document.getElementById('profileEmailInput').value = LLOS_Cache.rawGet('userEmail') || 'test@example.com';
         document.getElementById('accountSubscriptionStatus').textContent = userSubscriptionTier.replace('_', '+').replace(/^\w/, c => c.toUpperCase());
         updateGamificationUI('user');
         switchModalTab(document.querySelector('#userProfileModal .modal-tab-button'), 'profileTab');
@@ -129,7 +129,7 @@
         const container = document.getElementById('dashboardCardToggleContainer');
         if(!container) return;
         container.innerHTML = '';
-        const savedConfig = JSON.parse(localStorage.getItem('dashboardCardConfig')) || dashboardCardConfig;
+        const savedConfig = JSON.parse(LLOS_Cache.rawGet('dashboardCardConfig')) || dashboardCardConfig;
         dashboardCardConfig.forEach(defaultCard => {
             const currentCardState = savedConfig.find(sc => sc.id === defaultCard.id) || defaultCard;
             const itemDiv = document.createElement('div');
@@ -157,13 +157,13 @@
             }
         });
         dashboardCardConfig = newConfig;
-        localStorage.setItem('dashboardCardConfig', JSON.stringify(newConfig));
+        LLOS_Cache.rawSet('dashboardCardConfig', JSON.stringify(newConfig));
         applyDashboardCustomization(newConfig);
         showToast("Dashboard customization saved. AI will adapt.", "success");
         closeModal('dashboardCustomizationModal');
     }
     function applyDashboardCustomization(configToApply) {
-        const currentConfig = configToApply || JSON.parse(localStorage.getItem('dashboardCardConfig')) || dashboardCardConfig;
+        const currentConfig = configToApply || JSON.parse(LLOS_Cache.rawGet('dashboardCardConfig')) || dashboardCardConfig;
         dashboardCardConfig.forEach(cardConf => {
             const cardElement = document.getElementById(cardConf.id);
             const isVisible = currentConfig.find(c => c.id === cardConf.id)?.visible ?? true;
@@ -189,7 +189,7 @@
                 const toggle = modal.querySelector(`[data-pref="${key}"] .toggle-switch`);
                 if(toggle) notificationPreferences[key] = toggle.classList.contains('active');
             });
-            localStorage.setItem('notificationPreferences', JSON.stringify(notificationPreferences));
+            LLOS_Cache.rawSet('notificationPreferences', JSON.stringify(notificationPreferences));
             showToast('Notification preferences saved!', 'success');
             closeModal('notificationSettingsModal');
         }
@@ -198,7 +198,7 @@
         openModal('helpAboutModal');
     }
     function openAILearningPrefsModal(){
-        const prefs = JSON.parse(localStorage.getItem('aiLearningPreferences')) || aiLearningPreferences;
+        const prefs = JSON.parse(LLOS_Cache.rawGet('aiLearningPreferences')) || aiLearningPreferences;
         const modal = document.getElementById('aiLearningPrefsModal');
         if(!modal) return;
         Object.keys(prefs).forEach(key => {
@@ -216,7 +216,7 @@
         if(visualSwitch) {
             visualSwitch.classList.toggle('active');
             aiLearningPreferences[prefKey] = visualSwitch.classList.contains('active');
-            localStorage.setItem('aiLearningPreferences', JSON.stringify(aiLearningPreferences));
+            LLOS_Cache.rawSet('aiLearningPreferences', JSON.stringify(aiLearningPreferences));
             showToast(`AI Learning for '${prefKey.replace(/([A-Z])/g, ' $1').toLowerCase()}' ${aiLearningPreferences[prefKey] ? 'enabled' : 'disabled'}.`, "ai_info");
         }
     }
@@ -227,9 +227,9 @@
                 savedPlacesIds: mockPlaces.all.filter(p => p.saved).map(p=>p.id),
                 gamification: { userLevel, userXP, xpToNextLevel, unlockedBadges: Array.from(unlockedBadges) },
                 settings: {
-                    darkMode: localStorage.getItem('darkMode') === 'true', themeAccent: localStorage.getItem('themeAccent'), aiPersonality: localStorage.getItem('aiPersonality'),
-                    dashboardConfig: JSON.parse(localStorage.getItem('dashboardCardConfig')), notificationPreferences: JSON.parse(localStorage.getItem('notificationPreferences')),
-                    userProfile: JSON.parse(localStorage.getItem('userProfile')), aiLearningPreferences: JSON.parse(localStorage.getItem('aiLearningPreferences'))
+                    darkMode: LLOS_Cache.rawGet('darkMode') === 'true', themeAccent: LLOS_Cache.rawGet('themeAccent'), aiPersonality: LLOS_Cache.rawGet('aiPersonality'),
+                    dashboardConfig: JSON.parse(LLOS_Cache.rawGet('dashboardCardConfig')), notificationPreferences: JSON.parse(LLOS_Cache.rawGet('notificationPreferences')),
+                    userProfile: JSON.parse(LLOS_Cache.rawGet('userProfile')), aiLearningPreferences: JSON.parse(LLOS_Cache.rawGet('aiLearningPreferences'))
                 }
             };
             const jsonString = JSON.stringify(dataToExport, null, 2);
@@ -245,7 +245,7 @@
             "Clear All Data?",
             "<p>This will reset all your tasks, habits, mood logs, custom settings, and other application data. This action cannot be undone.</p><p><strong>Are you absolutely sure?</strong></p>",
             () => {
-                localStorage.clear();
+                LLOS_Cache.clearAll();
                 showToast("All application data has been cleared. Please log in again.", "success", 3000);
                 setTimeout(() => {
                     window.location.reload();

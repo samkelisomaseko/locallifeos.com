@@ -69,6 +69,7 @@
       <div class="tab" data-tab="flags">Feature Flags</div>
       <div class="tab" data-tab="config">Config</div>
       <div class="tab" data-tab="metrics">Metrics</div>
+      <div class="tab" data-tab="entities">Entities</div>
     </div>
 
     <!-- Users tab -->
@@ -110,6 +111,46 @@
       <div class="card" style="margin-top:1rem">
         <h3 style="margin-bottom:0.5rem;color:#94a3b8">System Health</h3>
         <div id="metrics-health" style="font-size:0.875rem;color:#e2e8f0"></div>
+      </div>
+    </div>
+
+    <!-- Entities tab -->
+    <div class="tab-content" id="tab-entities">
+      <div class="card">
+        <div class="actions" style="margin-bottom:0.75rem">
+          <select id="entities-select" style="padding:0.4rem;border:1px solid #475569;border-radius:0.375rem;background:#0f172a;color:#e2e8f0;font-size:0.8rem">
+            <option>tasks</option><option>habits</option><option>moods</option>
+            <option>sleep</option><option>places</option><option>deals</option>
+            <option>channels</option><option>messages</option><option>bulletins</option>
+            <option>notifications</option><option>trustedContacts</option><option>gamification</option>
+            <option>applets</option><option>integratedApps</option>
+          </select>
+          <input id="entities-q" placeholder="Search…" style="padding:0.4rem 0.6rem;border:1px solid #475569;border-radius:0.375rem;background:#0f172a;color:#e2e8f0;font-size:0.8rem;flex:1;min-width:120px">
+          <input id="entities-userid" placeholder="userId filter" style="padding:0.4rem 0.6rem;border:1px solid #475569;border-radius:0.375rem;background:#0f172a;color:#e2e8f0;font-size:0.8rem;width:160px">
+          <input id="entities-status" placeholder="status filter" style="padding:0.4rem 0.6rem;border:1px solid #475569;border-radius:0.375rem;background:#0f172a;color:#e2e8f0;font-size:0.8rem;width:130px">
+          <button class="btn-primary" onclick="loadEntities()">Search</button>
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>Summary</th><th>Updated</th><th>Actions</th></tr></thead>
+          <tbody id="entities-body"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:0.5rem;color:#94a3b8">Inspect / Override</h3>
+        <pre id="entities-inspect" style="font-size:0.75rem;background:#0f172a;padding:0.75rem;border-radius:0.375rem;overflow:auto;max-height:220px;color:#e2e8f0">Select a record to inspect.</pre>
+        <textarea id="entities-edit" rows="5" placeholder='{"field": "value"}' style="width:100%;margin-top:0.5rem;padding:0.5rem;border:1px solid #475569;border-radius:0.375rem;background:#0f172a;color:#e2e8f0;font-size:0.8rem;font-family:monospace"></textarea>
+        <div class="actions" style="margin-top:0.5rem">
+          <button class="btn-primary" onclick="saveEntityOverride()">Save override</button>
+          <button class="btn-ghost" onclick="suspendEntityRecord()">Suspend</button>
+          <button class="btn-ghost" onclick="restoreEntityRecord()">Restore</button>
+          <button class="btn-primary" onclick="approveDeal()">Approve deal</button>
+          <button class="btn-danger" onclick="rejectDeal()">Reject deal</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <h3 style="margin-bottom:0.5rem;color:#94a3b8">Sync Health</h3>
+        <div class="actions" style="margin-bottom:0.5rem"><button class="btn-ghost" onclick="loadSyncHealth()">Refresh sync health</button></div>
+        <div id="entities-sync" style="font-size:0.875rem;color:#e2e8f0">—</div>
       </div>
     </div>
   </div>
@@ -176,13 +217,19 @@
       else if (tab.dataset.tab === 'flags') loadFlags();
       else if (tab.dataset.tab === 'config') loadConfig();
       else if (tab.dataset.tab === 'metrics') loadMetrics();
+      else if (tab.dataset.tab === 'entities') loadEntities();
     });
   });
 
   // ── Users ─────────────────────────────────────────────────────
+  // XSS hardening (feature 30, ticket #7): row buttons carry data-attributes;
+  // clicks delegated below. Email looked up from the cached list — never
+  // interpolated into a JS-string context.
+  let _usersCache = [];
   async function loadUsers() {
     try {
       const { users } = await api('/admin/v1/users');
+      _usersCache = users;
       $('users-body').innerHTML = users.map(u => `
         <tr>
           <td>${h(u.email)}</td>
@@ -191,16 +238,17 @@
           <td style="font-size:0.75rem">${u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : '—'}</td>
           <td class="actions">
             ${u.status === 'active'
-              ? `<button class="btn-danger" onclick="suspendUser('${u.id}','${h(u.email)}')">Suspend</button>`
+              ? `<button class="btn-danger" data-act="suspend-user" data-userid="${h(u.id)}">Suspend</button>`
               : u.status === 'suspended'
-                ? `<button class="btn-primary" onclick="unsuspendUser('${u.id}')">Unsuspend</button>`
+                ? `<button class="btn-primary" data-act="unsuspend-user" data-userid="${h(u.id)}">Unsuspend</button>`
                 : ''}
           </td>
         </tr>`).join('');
     } catch (e) { $('users-body').innerHTML = `<tr><td colspan="5" style="color:#fca5a5">${h(e.message)}</td></tr>`; }
   }
 
-  async function suspendUser(id, email) {
+  async function suspendUser(id) {
+    const email = (_usersCache.find(u => String(u.id) === String(id)) || {}).email || id;
     if (!confirm(`Suspend ${email}?`)) return;
     await api(`/admin/v1/users/${id}/suspend`, { method: 'PATCH', body: JSON.stringify({ reason: 'Admin action' }) });
     toast('User suspended');
@@ -220,7 +268,7 @@
       $('flags-body').innerHTML = flags.length ? flags.map(f => `
         <tr>
           <td><code>${h(f.key)}</code></td>
-          <td><button class="flag-toggle ${f.enabled ? 'on' : 'off'}" onclick="toggleFlag('${h(f.key)}', ${!f.enabled})"></button></td>
+          <td><button class="flag-toggle ${f.enabled ? 'on' : 'off'}" data-act="toggle-flag" data-key="${h(f.key)}" data-enabled="${!f.enabled}"></button></td>
           <td style="font-size:0.8rem;color:#94a3b8">${h(f.description ?? '—')}</td>
           <td></td>
         </tr>`).join('') : '<tr><td colspan="4" style="color:#94a3b8">No feature flags yet.</td></tr>';
@@ -270,7 +318,117 @@
     }
   }
 
+  // ── Entities ──────────────────────────────────────────────────
+  let _entId = null;
+  function entName() { return $('entities-select').value; }
+  function entQuery() {
+    const p = new URLSearchParams();
+    const q = $('entities-q').value.trim();
+    const userId = $('entities-userid').value.trim();
+    const status = $('entities-status').value.trim();
+    if (q) p.set('q', q);
+    if (userId) p.set('userId', userId);
+    if (status) p.set('status', status);
+    p.set('limit', '20');
+    const s = p.toString();
+    return s ? `?${s}` : '';
+  }
+  function entSummary(r) {
+    return r.title || r.name || r.businessName || r.email || r.content || r.message || r.appName || r.mood || r.date || r.id;
+  }
+
+  async function loadEntities() {
+    try {
+      const data = await api(`/admin/v1/entities/${encodeURIComponent(entName())}${entQuery()}`);
+      const rows = data.rows || [];
+      $('entities-body').innerHTML = rows.length ? rows.map(r => `
+        <tr>
+          <td style="font-size:0.7rem;max-width:120px;overflow:hidden;text-overflow:ellipsis"><code>${h(r.id)}</code></td>
+          <td style="font-size:0.8rem">${h(String(entSummary(r)).slice(0, 80))}</td>
+          <td style="font-size:0.75rem">${r.updatedAt ? new Date(r.updatedAt).toLocaleDateString() : '—'}</td>
+          <td class="actions"><button class="btn-ghost" data-act="inspect-entity" data-id="${h(r.id)}">Inspect</button></td>
+        </tr>`).join('') : '<tr><td colspan="4" style="color:#94a3b8">No records.</td></tr>';
+    } catch (e) { $('entities-body').innerHTML = `<tr><td colspan="4" style="color:#fca5a5">${h(e.message)}</td></tr>`; }
+  }
+
+  async function inspectEntity(id) {
+    _entId = id;
+    try {
+      const data = await api(`/admin/v1/entities/${encodeURIComponent(entName())}/${encodeURIComponent(id)}`);
+      $('entities-inspect').textContent = JSON.stringify(data.record, null, 2);
+      toast('Record loaded');
+    } catch (e) { $('entities-inspect').textContent = `Error: ${e.message}`; }
+  }
+
+  async function saveEntityOverride() {
+    if (!_entId) { toast('Inspect a record first'); return; }
+    let updates;
+    try { updates = JSON.parse($('entities-edit').value || '{}'); }
+    catch { toast('Invalid JSON'); return; }
+    await api(`/admin/v1/entities/${encodeURIComponent(entName())}/${encodeURIComponent(_entId)}`, { method: 'PATCH', body: JSON.stringify(updates) });
+    toast('Override saved');
+    loadEntities();
+    inspectEntity(_entId);
+  }
+
+  async function suspendEntityRecord() {
+    if (!_entId) { toast('Inspect a record first'); return; }
+    await api(`/admin/v1/entities/${encodeURIComponent(entName())}/${encodeURIComponent(_entId)}/suspend`, { method: 'POST' });
+    toast('Suspended');
+    loadEntities();
+  }
+
+  async function restoreEntityRecord() {
+    if (!_entId) { toast('Inspect a record first'); return; }
+    await api(`/admin/v1/entities/${encodeURIComponent(entName())}/${encodeURIComponent(_entId)}/restore`, { method: 'POST' });
+    toast('Restored');
+    loadEntities();
+  }
+
+  async function approveDeal() {
+    if (!_entId) { toast('Inspect a deal first'); return; }
+    await api(`/admin/v1/deals/${encodeURIComponent(_entId)}/approve`, { method: 'POST' });
+    toast('Deal approved');
+    loadEntities();
+  }
+
+  async function rejectDeal() {
+    if (!_entId) { toast('Inspect a deal first'); return; }
+    await api(`/admin/v1/deals/${encodeURIComponent(_entId)}/reject`, { method: 'POST' });
+    toast('Deal rejected');
+    loadEntities();
+  }
+
+  async function loadSyncHealth() {
+    try {
+      const data = await api('/admin/v1/sync-health');
+      const ents = data.entities || {};
+      $('entities-sync').innerHTML =
+        Object.entries(ents).map(([k, v]) => `<span class="badge badge-blue" style="margin:0.15rem">${h(k)}: ${h(String(v))}</span>`).join('') +
+        `<p style="margin-top:0.5rem;color:#94a3b8">Queue depth: <strong>${data.syncQueueDepth}</strong> · Uptime: <strong>${Math.round((data.uptimeSec || 0) / 60)}m</strong></p>`;
+    } catch (e) { $('entities-sync').textContent = `Error: ${e.message}`; }
+  }
+
   // ── Init ──────────────────────────────────────────────────────
+  // Delegated bindings for data-attribute buttons (ticket #7 — no data in
+  // inline handlers). Parents persist across innerHTML re-renders.
+  $('users-body').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-userid');
+    if (btn.dataset.act === 'suspend-user') suspendUser(id);
+    else if (btn.dataset.act === 'unsuspend-user') unsuspendUser(id);
+  });
+  $('flags-body').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-act="toggle-flag"]');
+    if (!btn) return;
+    toggleFlag(btn.getAttribute('data-key'), btn.getAttribute('data-enabled') === 'true');
+  });
+  $('entities-body').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-act="inspect-entity"]');
+    if (!btn) return;
+    inspectEntity(btn.getAttribute('data-id'));
+  });
   checkAuth();
   </script>
 </body>

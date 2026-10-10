@@ -12,6 +12,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="/src/styles/index.css"/>
+<link rel="manifest" href="/manifest.json"/>
 </head>
 <body>
 <div id="authContainer">
@@ -1534,6 +1535,8 @@
 </div>
 </div>
 </div>
+<script src="/lib/offline-cache-global.js"></script>
+<script src="/lib/escape.js"></script>
 <script src="/modules/state.js"></script>
 <script src="/modules/native-bridge.js"></script>
 <script src="/modules/data.js"></script>
@@ -1571,5 +1574,6 @@
 
 <script src="/modules/ai-super-core.js"></script>
 <script async="" defer="" src="https://maps.googleapis.com/maps/api/js?key=%VITE_GOOGLE_MAPS_API_KEY%&amp;libraries=visualization,drawing,marker&amp;callback=initMap"></script>
+<script src="/lib/sw-register.js"></script>
 
 </body></html>

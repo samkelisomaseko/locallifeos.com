@@ -11,6 +11,7 @@ import { requireAuth } from '../middleware/auth.mjs';
 import { scopeToUser } from '../middleware/ownership.mjs';
 import { writeAuditLog } from '../lib/audit.mjs';
 import { validateEntity } from '../lib/validation.mjs';
+import { isMutedInChannel } from './chat-realtime.mjs';
 
 const ENTITY_TABLES = {
   tasks: () => import('../db/schema.js').then(m => m.tasks),
@@ -38,6 +39,18 @@ const ENTITY_SINGULAR = {
 
 // Validation lives in server/lib/validation.mjs (JSON-Schema style, Batch B).
 
+// channels uses `createdBy` instead of `userId`; everything else uses `userId`.
+export const OWNERSHIP_COLUMN = {
+  channels: 'createdBy',
+};
+function ownershipCol(table) {
+  return 'createdBy' in table ? 'createdBy' : ('userId' in table ? 'userId' : null);
+}
+function ownerOf(item) {
+  if (!item) return undefined;
+  return item.userId ?? item.createdBy;
+}
+
 export default async function entitiesPlugin(app) {
   // ── Auth for all entity routes ─────────────────────────────────
   app.addHook('preHandler', requireAuth);
@@ -56,14 +69,16 @@ export default async function entitiesPlugin(app) {
       const offset = (pageNum - 1) * limitNum;
 
       let query = db.select().from(table);
-      if (req.ownershipScope) {
-        query = query.where(eq(table.userId, req.ownershipScope));
+      const ownerCol = ownershipCol(table);
+      if (req.ownershipScope && ownerCol) {
+        query = query.where(eq(table[ownerCol], req.ownershipScope));
       }
-      const rows = await query.orderBy(desc(table.updatedAt)).limit(limitNum).offset(offset);
+      const orderCol = table.updatedAt ?? table.createdAt ?? table.id;
+      const rows = await query.orderBy(desc(orderCol)).limit(limitNum).offset(offset);
 
       const countQuery = db.select({ count: sql`count(*)::int` }).from(table);
-      const [{ count }] = req.ownershipScope
-        ? await countQuery.where(eq(table.userId, req.ownershipScope))
+      const [{ count }] = req.ownershipScope && ownerCol
+        ? await countQuery.where(eq(table[ownerCol], req.ownershipScope))
         : await countQuery;
 
       return reply.send({ [entityName]: rows, total: count, page: pageNum, limit: limitNum });
@@ -75,8 +90,8 @@ export default async function entitiesPlugin(app) {
       const rows = await db.select().from(table).where(eq(table.id, req.params.id)).limit(1);
       if (!rows.length) return reply.code(404).send({ error: 'Not found.' });
       const item = rows[0];
-      // Ownership check
-      if (req.ownershipScope && item.userId && item.userId !== req.ownershipScope) {
+      // Ownership check (userId or createdBy depending on table)
+      if (req.ownershipScope && ownerOf(item) && ownerOf(item) !== req.ownershipScope) {
         return reply.code(403).send({ error: 'Not your resource.' });
       }
       return reply.send({ [ENTITY_SINGULAR[entityName]]: item });
@@ -86,19 +101,28 @@ export default async function entitiesPlugin(app) {
     app.post(basePath, async (req, reply) => {
       const db = getDb();
       const body = req.body ?? {};
+      // Phase 4A: channel-scoped mute list (app_config `muted.<channelId>`).
+      // Degrades open when the DB is unavailable — see isMutedInChannel.
+      if (entityName === 'messages' && body.channelId) {
+        if (await isMutedInChannel(body.channelId, req.user.id)) {
+          return reply.code(403).send({ error: 'You are muted in this channel.' });
+        }
+      }
       const result = validateEntity(entityName, body);
       if (entityName !== 'gamification' && !result.ok) {
         return reply.code(400).send({ error: 'Validation failed.', details: result.errors });
       }
       const now = new Date();
+      const ownerValue = req.ownershipScope || req.user.id;
+      const ownerCol = ownershipCol(table);
       const record = {
         ...body,
         id: body.id || crypto.randomUUID(),
-        userId: req.ownershipScope || req.user.id,
         version: 1,
         createdAt: now,
         updatedAt: now,
       };
+      if (ownerCol) record[ownerCol] = body[ownerCol] || ownerValue;
       const [created] = await db.insert(table).values(record).returning();
       await writeAuditLog({
         actorId: req.user.id,
@@ -120,7 +144,7 @@ export default async function entitiesPlugin(app) {
       if (!rows.length) return reply.code(404).send({ error: 'Not found.' });
 
       const before = rows[0];
-      if (req.ownershipScope && before.userId && before.userId !== req.ownershipScope) {
+      if (req.ownershipScope && ownerOf(before) && ownerOf(before) !== req.ownershipScope) {
         return reply.code(403).send({ error: 'Not your resource.' });
       }
 
@@ -137,6 +161,7 @@ export default async function entitiesPlugin(app) {
       delete updates.id;
       delete updates.createdAt;
       delete updates.userId;
+      delete updates.createdBy;
 
       const [updated] = await db.update(table).set(updates).where(eq(table.id, req.params.id)).returning();
       await writeAuditLog({
@@ -158,7 +183,7 @@ export default async function entitiesPlugin(app) {
       if (!rows.length) return reply.code(404).send({ error: 'Not found.' });
 
       const before = rows[0];
-      if (req.ownershipScope && before.userId && before.userId !== req.ownershipScope) {
+      if (req.ownershipScope && ownerOf(before) && ownerOf(before) !== req.ownershipScope) {
         return reply.code(403).send({ error: 'Not your resource.' });
       }
 

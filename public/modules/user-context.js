@@ -9,7 +9,7 @@
 (function(){
   // current user (persistable)
   try {
-    window.currentUser = JSON.parse(localStorage.getItem("currentUser") || '{"id":"1","name":"You"}');
+    window.currentUser = JSON.parse(LLOS_Cache.rawGet("currentUser") || '{"id":"1","name":"You"}');
   } catch(e) {
     window.currentUser = { id: "1", name: "You" };
   }

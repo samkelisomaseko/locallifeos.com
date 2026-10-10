@@ -78,7 +78,7 @@
     }
     function openPrivacySettingsModal() {
         const toggle = document.getElementById('appLockToggle')?.querySelector('.toggle-switch');
-        if(toggle) toggle.classList.toggle('active', !!localStorage.getItem('appPin'));
+        if(toggle) toggle.classList.toggle('active', !!LLOS_Cache.rawGet('appPin'));
         openModal('privacySettingsModal');
     }
     function openIntegrationSettingsModal() {
@@ -114,7 +114,7 @@
                         }
                         if (importedData.settings) {
                             Object.keys(importedData.settings).forEach(key => {
-                                localStorage.setItem(key, typeof importedData.settings[key] === 'object' ? JSON.stringify(importedData.settings[key]) : importedData.settings[key]);
+                                LLOS_Cache.rawSet(key, typeof importedData.settings[key] === 'object' ? JSON.stringify(importedData.settings[key]) : importedData.settings[key]);
                             });
                         }
                         if (importedData.savedPlacesIds) {

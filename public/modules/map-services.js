@@ -380,7 +380,7 @@
     }
     
     document.addEventListener('visibilitychange', () => {
-        const isAppLockEnabled = localStorage.getItem('appLockEnabled') === 'true';
+        const isAppLockEnabled = LLOS_Cache.rawGet('appLockEnabled') === 'true';
         if (isAppLockEnabled && document.visibilityState === 'hidden') {
             isAppLocked = true;
         } else if (isAppLocked && document.visibilityState === 'visible') {

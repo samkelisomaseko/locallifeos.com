@@ -236,5 +236,265 @@
     "priority": "high",
     "assigned_workstream": "fullstack",
     "verification_method": "manual_test"
+  },
+  {
+    "id": 17,
+    "category": "frontend",
+    "description": "Offline-cache migration: zero direct localStorage touches in public/modules/* (all via offline-cache-global shim)",
+    "steps": [
+      "Grep public/modules/* for localStorage. — 0 matches",
+      "node --check passes on all 10 edited modules + shim",
+      "npm run build succeeds; UI behavior identical (no keys/formats changed)"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "frontend",
+    "verification_method": "ci_script"
+  },
+  {
+    "id": 18,
+    "category": "backend",
+    "description": "Channels ownership fix: generic entity CRUD maps channels to createdBy instead of userId",
+    "steps": [
+      "Live DB: create channel as user, list shows it; other user cannot read/update it",
+      "Admin entities list with userId filter maps to createdBy for channels",
+      "npm run db:migrate + seed on live Postgres, then test:admin green"
+    ],
+    "passes": false,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "integration_tests"
+  },
+  {
+    "id": 19,
+    "category": "backend",
+    "description": "Admin Entities tab: per-entity list/search/inspect/override/suspend + deals approve-reject + sync-health in panel",
+    "steps": [
+      "Login to /admin as super_admin, open Entities tab",
+      "List tasks, search, inspect a record, override-edit a field",
+      "Suspend/restore a bulletin; approve/reject a deal; audit log shows before/after",
+      "Requires live DATABASE_URL"
+    ],
+    "passes": false,
+    "priority": "high",
+    "assigned_workstream": "frontend",
+    "verification_method": "manual_test"
+  },
+  {
+    "id": 20,
+    "category": "backend",
+    "description": "Uploads endpoint: authed POST /api/v1/uploads (5MB, image allow-list, traversal-safe) served from /uploads/*",
+    "steps": [
+      "Unauthenticated POST returns 401 (verified)",
+      "Authenticated image upload returns {url}; GET url serves the file",
+      "Oversize/wrong-type upload rejected; ../ filename sanitized",
+      "Requires live DATABASE_URL for authed test"
+    ],
+    "passes": false,
+    "priority": "medium",
+    "assigned_workstream": "backend",
+    "verification_method": "integration_tests"
+  },
+  {
+    "id": 21,
+    "category": "backend",
+    "description": "Seed covers all entities (sleep, messages, notifications, trustedContacts, applets, integratedApps added)",
+    "steps": [
+      "docker compose up -d; npm run db:migrate; npm run seed",
+      "Verify row counts per entity for test@example.com",
+      "First login renders identical demo content"
+    ],
+    "passes": false,
+    "priority": "medium",
+    "assigned_workstream": "backend",
+    "verification_method": "manual_test"
+  },
+  {
+    "id": 22,
+    "category": "testing",
+    "description": "Test runner stable (test-force-exit) + offline-sync unit gate (4/4, no DB required)",
+    "steps": [
+      "npm test exits 0 without hanging",
+      "node --test --test-force-exit tests/unit/offline-sync.test.mjs — 4/4 pass",
+      "batch-b suite still 12 pass + 1 skip"
+    ],
+    "passes": true,
+    "priority": "medium",
+    "assigned_workstream": "backend",
+    "verification_method": "ci_script"
+  },
+  {
+    "id": 23,
+    "category": "realtime",
+    "description": "Chat realtime REST foundations: delta-fetch, read/unread, presence/typing (WS upgrade deferred)",
+    "steps": [
+      "Authed: poll channel messages with ?since= returns only newer messages",
+      "POST read then GET unread returns 0; new message increments unread",
+      "Presence shows online users, typing flags expire after ~30s",
+      "Unauthenticated access returns 401 on all routes (verified)",
+      "Live two-browser exchange + WS upgrade: pending (needs DB + websocket dep)"
+    ],
+    "passes": false,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "integration_tests"
+  },
+  {
+    "id": 24,
+    "category": "realtime",
+    "description": "Admin chat controls: message soft-hide, channel mute/unmute, all audit-logged",
+    "steps": [
+      "Moderator hides a message — users see placeholder, audit shows before/after",
+      "Muted user POSTing to channel gets 403; unmute restores posting",
+      "Requires live DATABASE_URL (mute-403 test skipped without DB)"
+    ],
+    "passes": false,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "integration_tests"
+  },
+  {
+    "id": 25,
+    "category": "testing",
+    "description": "Phase 4A unit gate: 21 tests (delta-fetch, TTL, mute helpers, RBAC/401) green without DB",
+    "steps": [
+      "node --test --test-force-exit tests/unit/phase4a.test.mjs — 20 pass + 1 skip",
+      "Combined suites (phase4a + batch-b + offline-sync): 36 pass, 0 fail",
+      "node --check clean on chat-realtime, admin-chat, app, entities"
+    ],
+    "passes": true,
+    "priority": "medium",
+    "assigned_workstream": "backend",
+    "verification_method": "ci_script"
+  },
+  {
+    "id": 26,
+    "category": "ai",
+    "description": "Server AI proxy: authed chat endpoint with provider call + guaranteed heuristic fallback + quotas",
+    "steps": [
+      "POST /api/v1/ai/chat without AI_API_KEY returns non-empty heuristic reply with fallback:true",
+      "Invalid body (empty, bad role, oversize) returns 400; unauth returns 401",
+      "Quota exceeded returns 429 with fallbackAvailable:true",
+      "Live provider call with real key: pending (needs AI_API_KEY)"
+    ],
+    "passes": false,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "integration_tests"
+  },
+  {
+    "id": 27,
+    "category": "ai",
+    "description": "Admin AI console: stats, per-user memory view/clear, config — all audit-logged",
+    "steps": [
+      "Stats show providerConfigured boolean (never the key)",
+      "Memory clear takes effect on next AI reply; audit shows before/after",
+      "Config patch validates types; moderator blocked from mutations",
+      "Requires live DATABASE_URL for full verification"
+    ],
+    "passes": false,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "integration_tests"
+  },
+  {
+    "id": 28,
+    "category": "testing",
+    "description": "Phase 4B unit gate: 28 pass + 1 skip; combined suites 64 pass, 0 fail",
+    "steps": [
+      "node --test --test-force-exit tests/unit/phase4b.test.mjs — 28 pass + 1 skip",
+      "All four suites together: 64 pass, 0 fail",
+      "node --check clean on ai-proxy, admin-ai"
+    ],
+    "passes": true,
+    "priority": "medium",
+    "assigned_workstream": "backend",
+    "verification_method": "ci_script"
+  },
+  {
+    "id": 29,
+    "category": "security",
+    "description": "Security audit report: XSS sink inventory + plan section 8 checklist mapping",
+    "steps": [
+      "Sink table recorded (admin panel safe via h(); ~20 public/modules sites ticketed)",
+      "Uploads re-check: no traversal/type/size hole",
+      "Keys/auth/RBAC/SSRF/rate-limit/deps all pass",
+      "Read-only: no diff, no verification run required"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "backend",
+    "verification_method": "manual_test"
+  },
+  {
+    "id": 30,
+    "category": "security",
+    "description": "Client XSS hardening (shared escapeHtml + wrap render sites) BEFORE server wiring",
+    "steps": [
+      "Shared escape util public/lib/escape.js + script tag (verified in dist/)",
+      "Wrapped ~186 sites across 10 modules; admin onclick to data-attributes (0 remain)",
+      "xss-hardening.test.mjs 8/8: malicious inert, benign byte-identical"
+    ],
+    "passes": true,
+    "priority": "critical",
+    "assigned_workstream": "frontend",
+    "verification_method": "unit_and_integration_tests"
+  },
+  {
+    "id": 31,
+    "category": "infra",
+    "description": "Container + CI: multi-stage Dockerfile, .dockerignore, GitHub Actions with secret scan",
+    "steps": [
+      "Dockerfile builds; no secrets baked; .env never copied; healthcheck present",
+      "CI: typecheck, test, build, secret-scan green; live-DB job skips without secret",
+      "Follow-up: unify entrypoint (API+static) or document reverse proxy"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "infra",
+    "verification_method": "ci_script"
+  },
+  {
+    "id": 32,
+    "category": "infra",
+    "description": "PWA shell: manifest, offline service worker, registration with zero inline scripts",
+    "steps": [
+      "vite build emits manifest.json, sw.js, sw-register.js into dist/",
+      "node --check clean on sw.js + sw-register.js",
+      "Follow-up: add icon-192.png + icon-512.png for installability"
+    ],
+    "passes": true,
+    "priority": "medium",
+    "assigned_workstream": "frontend",
+    "verification_method": "ci_script"
+  },
+  {
+    "id": 33,
+    "category": "infra",
+    "description": "Unified production entrypoint: single server for dist/ static + API + weather",
+    "steps": [
+      "GET / serves index.html; unknown app route SPA-fallbacks; /api/v1/health JSON",
+      "Immutable cache on /assets/*, traversal returns 400/404 without leak",
+      "entrypoint.test.mjs 9/9 pass; live boot proof done",
+      "npm run serve + Dockerfile CMD use server/server.mjs"
+    ],
+    "passes": true,
+    "priority": "high",
+    "assigned_workstream": "infra",
+    "verification_method": "integration_tests"
+  },
+  {
+    "id": 34,
+    "category": "frontend",
+    "description": "Define global showToast (called ~190x, currently undefined — any toast path throws)",
+    "steps": [
+      "Define showToast(msg, type) matching call-site signatures",
+      "Verify toast renders via existing toast DOM/CSS with zero visual change",
+      "Full unit suite stays green"
+    ],
+    "passes": false,
+    "priority": "high",
+    "assigned_workstream": "frontend",
+    "verification_method": "unit_tests"
   }
 ]

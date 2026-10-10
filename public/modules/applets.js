@@ -17,9 +17,9 @@
             card.innerHTML = `
                 <div class="applet-header">
                     <div class="applet-icon" style="background-color: ${applet.color};"><i class="${applet.icon}"></i></div>
-                    <h4 class="applet-title">${applet.name}</h4>
+                    <h4 class="applet-title">${LLOS_Escape.escapeHtml(applet.name)}</h4>
                 </div>
-                <p class="applet-desc">${applet.desc}</p>
+                <p class="applet-desc">${LLOS_Escape.escapeHtml(applet.desc)}</p>
                 <div class="applet-ai-insight"><i class="fas fa-brain"></i> AI suggests this for users interested in 'community' and 'productivity'.</div>
                 <div class="applet-actions">
                     <button class="button install-button ${applet.installed ? 'danger' : ''}" data-applet-id="${applet.id}" onclick="handleAppletInstallToggle(this, '${applet.id}')">
@@ -44,7 +44,7 @@
             html += `
                 <button class="wellness-tool-card" onclick="launchApplet('${applet.id}')">
                     <i class="${applet.icon}" style="color:${applet.color};"></i>
-                    <span class="tool-title">${applet.name}</span>
+                    <span class="tool-title">${LLOS_Escape.escapeHtml(applet.name)}</span>
                 </button>
             `;
         });
@@ -129,11 +129,11 @@
         let memories = [];
         if(aiLearningPreferences.learnSavedPlaces) {
             const savedPlace = mockPlaces.all.find(p => p.saved);
-            if(savedPlace) memories.push(`You like the place: <strong>${savedPlace.name}</strong>.`);
+            if(savedPlace) memories.push(`You like the place: <strong>${LLOS_Escape.escapeHtml(savedPlace.name)}</strong>.`);
         }
          if(aiLearningPreferences.learnMoodLogs) {
             const lastMood = loggedMoods[loggedMoods.length -1];
-            if(lastMood) memories.push(`Your last logged mood was: ${lastMood.mood}`);
+            if(lastMood) memories.push(`Your last logged mood was: ${LLOS_Escape.escapeHtml(lastMood.mood)}`);
         }
          if(aiLearningPreferences.learnTaskPatterns) {
             const workTasks = tasks.filter(t => t.category === 'work').length;
@@ -174,7 +174,7 @@
             <div class="input-group">
                 <label>Diagnostic Info (Auto-attached)</label>
                 <p class="card-subtitle" style="background-color:var(--placeholder-bg); padding:var(--space-sm); border-radius: var(--border-radius-sm); font-size:0.8rem;">
-                    <strong>Last Action:</strong> ${lastUserAction}<br>
+                    <strong>Last Action:</strong> ${LLOS_Escape.escapeHtml(lastUserAction)}<br>
                     <strong>Version:</strong> v15.0 Production
                 </p>
             </div>

@@ -72,7 +72,7 @@
             const upcomingTasks = tasks.filter(t => !t.completed && (t.dueDate === today || t.dueDate === "Today" || !t.dueDate)).slice(0, 3); 
             if (upcomingTasks.length === 0) {
                 container.innerHTML = `<div class="empty-state" style="padding:10px 0;"><i class="fas fa-check-circle"></i><p>All tasks done for now!</p></div>`;
-                 aiInsightContainer.innerHTML = `<i class="fas fa-brain"></i> AI: Great job clearing your tasks, ${userName}! Time to relax or plan something fun.`;
+                 aiInsightContainer.innerHTML = `<i class="fas fa-brain"></i> AI: Great job clearing your tasks, ${LLOS_Escape.escapeHtml(userName)}! Time to relax or plan something fun.`;
                  aiInsightContainer.classList.remove('hidden');
             } else {
                 upcomingTasks.forEach(task => {
@@ -80,22 +80,22 @@
                      taskEl.className = 'task-item'; 
                      taskEl.setAttribute('role', 'listitem');
                      taskEl.innerHTML = `
-                        <button class="task-checkbox-button" onclick="toggleTaskStatus(${task.id}, true)" aria-label="${task.completed ? 'Mark as incomplete' : 'Mark as complete'} ${task.title}">
+                        <button class="task-checkbox-button" onclick="toggleTaskStatus(${task.id}, true)" aria-label="${task.completed ? 'Mark as incomplete' : 'Mark as complete'} ${LLOS_Escape.escapeAttr(task.title)}">
                             <div class="task-checkbox ${task.completed ? 'completed' : ''}">${task.completed ? '<i class="fas fa-check"></i>' : ''}</div>
                         </button>
                         <div class="task-info">
-                            <div class="task-title">${task.title}</div>
+                            <div class="task-title">${LLOS_Escape.escapeHtml(task.title)}</div>
                         </div>
-                        <div class="task-time">${task.time}</div>
+                        <div class="task-time">${LLOS_Escape.escapeHtml(task.time)}</div>
                      `;
                      container.appendChild(taskEl);
                 });
                 const todayStr = new Date().toISOString().split('T')[0];
                 if(upcomingTasks.some(t => t.category === 'work' && (t.dueDate === todayStr || t.dueDate === "Today") )) {
-                     aiInsightContainer.innerHTML = `<i class="fas fa-brain"></i> AI: Looks like a productive day ahead, ${userName}! Focus on those work items.`;
+                     aiInsightContainer.innerHTML = `<i class="fas fa-brain"></i> AI: Looks like a productive day ahead, ${LLOS_Escape.escapeHtml(userName)}! Focus on those work items.`;
                      aiInsightContainer.classList.remove('hidden');
                 } else if (upcomingTasks.some(t => t.category === 'health')) {
-                     aiInsightContainer.innerHTML = `<i class="fas fa-brain"></i> AI: Don't forget your wellness goals today, ${userName}!`;
+                     aiInsightContainer.innerHTML = `<i class="fas fa-brain"></i> AI: Don't forget your wellness goals today, ${LLOS_Escape.escapeHtml(userName)}!`;
                      aiInsightContainer.classList.remove('hidden');
                 } else {
                      aiInsightContainer.classList.add('hidden');
@@ -129,7 +129,7 @@
             if (nextTask) {
                 widgets.push({
                     icon: 'fas fa-clipboard-list', color: 'var(--primary-accent)', title: 'Next Task',
-                    value: `${nextTask.title.substring(0, 25)}${nextTask.title.length > 25 ? '...' : ''}`,
+                    value: `${LLOS_Escape.escapeHtml(nextTask.title.substring(0, 25))}${nextTask.title.length > 25 ? '...' : ''}`,
                     action: () => setActiveScreen('planner')
                 });
             } else {
@@ -158,7 +158,7 @@
             const highStreakHabit = habits.find(h => h.streak > 5);
             if(highStreakHabit){
                  widgets.push({
-                    icon: 'fas fa-fire', color: '#FF9800', title: `${highStreakHabit.name.substring(0,12)}...`,
+                    icon: 'fas fa-fire', color: '#FF9800', title: `${LLOS_Escape.escapeHtml(highStreakHabit.name.substring(0,12))}...`,
                     value: `${highStreakHabit.streak} Day Streak!`, action: () => setActiveScreen('wellness')
                 });
             }
@@ -208,7 +208,7 @@
                 const weatherText = weatherTextEl.textContent.toLowerCase();
                 if (weatherText && weatherText.includes('sunny') && tasks.some(t => t.title.toLowerCase().includes('walk') && !t.completed)) {
                     suggestions.push({
-                        id: 'sunnyWalk', priority: 5, icon: 'fa-sun', text: `It's sunny, ${userName} – ideal for that walk you planned!`,
+                        id: 'sunnyWalk', priority: 5, icon: 'fa-sun', text: `It's sunny, ${LLOS_Escape.escapeHtml(userName)} – ideal for that walk you planned!`,
                         buttonText: 'Find a Nature Spot', buttonIcon: 'fa-tree',
                         action: () => { setActiveScreen('explore'); setTimeout(() => { const parkFilterButton = document.querySelector('#exploreFilterBar button[data-filter=\'parks\']'); if (parkFilterButton) filterPlaces('parks', parkFilterButton);}, 50);}
                     });
@@ -232,19 +232,19 @@
             const coffeeDeal = mockDeals.find(d => d.category === 'food' && d.title.toLowerCase().includes('coffee'));
             if(savedCafe && coffeeDeal && aiLearningPreferences.learnSavedPlaces){
                  suggestions.push({
-                    id: 'cafeDeal', priority: 4, icon: 'fa-tags', text: `Since you like ${savedCafe.name.substring(0,15)}..., check out this deal: "${coffeeDeal.title.substring(0,20)}..."!`,
+                    id: 'cafeDeal', priority: 4, icon: 'fa-tags', text: `Since you like ${LLOS_Escape.escapeHtml(savedCafe.name.substring(0,15))}..., check out this deal: "${LLOS_Escape.escapeHtml(coffeeDeal.title.substring(0,20))}..."!`,
                     buttonText: 'View Deal', buttonIcon: 'fa-compass', action: () => { setActiveScreen('explore'); setTimeout(() => showDealDetailModal(coffeeDeal), 50); }
                 });
             }
             const longStreakHabit = habits.find(h => h.streak > 10 && h.current < h.goal);
             if (longStreakHabit && aiLearningPreferences.learnHabitTracking) {
                 suggestions.push({
-                    id: 'habitStreak', priority: 6, icon: 'fa-fire', text: `Keep up the great work on "${longStreakHabit.name.substring(0,20)}..."! You're on a ${longStreakHabit.streak}-day streak!`,
+                    id: 'habitStreak', priority: 6, icon: 'fa-fire', text: `Keep up the great work on "${LLOS_Escape.escapeHtml(longStreakHabit.name.substring(0,20))}..."! You're on a ${longStreakHabit.streak}-day streak!`,
                     buttonText: 'View Wellness', buttonIcon: 'fa-heartbeat', action: () => setActiveScreen('wellness')
                 });
             }
             if (suggestions.length === 0) {
-                container.innerHTML = `<div class="empty-state" style="padding:10px 0;"><i class="fas fa-brain"></i><p>AI: No specific suggestions right now, ${userName}. Enjoy your day!</p></div>`;
+                container.innerHTML = `<div class="empty-state" style="padding:10px 0;"><i class="fas fa-brain"></i><p>AI: No specific suggestions right now, ${LLOS_Escape.escapeHtml(userName)}. Enjoy your day!</p></div>`;
                 return;
             }
             suggestions.sort((a,b) => b.priority - a.priority);
@@ -299,7 +299,7 @@
             }
             topDeals = [...new Set(topDeals)].slice(0, 2);
             if (topDeals.length === 0) {
-                container.innerHTML = `<div class="empty-state" style="padding:10px 0;"><i class="fas fa-tags"></i><p>AI: No special deals match your profile today, ${userName}. Check Explore!</p></div>`;
+                container.innerHTML = `<div class="empty-state" style="padding:10px 0;"><i class="fas fa-tags"></i><p>AI: No special deals match your profile today, ${LLOS_Escape.escapeHtml(userName)}. Check Explore!</p></div>`;
             } else {
                 topDeals.forEach(deal => {
                     const dealEl = document.createElement('article');
@@ -317,11 +317,11 @@
                         expiryText = expiry < today ? `<span class="expiry" style="color:var(--danger-color); font-weight:bold;">Expired</span>` : `<span class="expiry">Expires: ${expiry.toLocaleDateString()}</span>`;
                     }
                     dealEl.innerHTML = `
-                        <img src="${deal.img}" alt="${deal.title}" loading="lazy">
+                        <img src="${LLOS_Escape.safeMediaUrl(deal.img)}" alt="${LLOS_Escape.escapeAttr(deal.title)}" loading="lazy">
                         <div class="deal-info">
-                            <div class="name">${deal.title}</div>
-                            <div class="details">${deal.description.substring(0, 50)}...</div>
-                            <div class="business">${deal.businessName}</div>
+                            <div class="name">${LLOS_Escape.escapeHtml(deal.title)}</div>
+                            <div class="details">${LLOS_Escape.escapeHtml(deal.description.substring(0, 50))}...</div>
+                            <div class="business">${LLOS_Escape.escapeHtml(deal.businessName)}</div>
                             ${expiryText}
                         </div>
                     `;

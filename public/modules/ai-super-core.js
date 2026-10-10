@@ -21,10 +21,10 @@ const AIUtil = (()=>{
   const uid = (p='id') => p+'_'+Math.random().toString(36).slice(2,10);
   const safeJSON = {
     get(k, fallback){
-      try{ return JSON.parse(localStorage.getItem(k)) ?? fallback }catch(e){ return fallback }
+      try{ return JSON.parse(LLOS_Cache.rawGet(k)) ?? fallback }catch(e){ return fallback }
     },
     set(k, v){
-      try{ localStorage.setItem(k, JSON.stringify(v)) }catch(e){ /* ignore */ }
+      try{ LLOS_Cache.rawSet(k, JSON.stringify(v)) }catch(e){ /* ignore */ }
     }
   };
   function el(sel, root=document){ return root.querySelector(sel) }
@@ -38,7 +38,7 @@ const AIUtil = (()=>{
   function showIsland(msg, icon='fa-solid fa-bell', actionLabel=null, actionFn=null){
     const island = el('#dynamicIslandAlert');
     if(!island) return;
-    island.innerHTML = `<i class="icon ${icon}"></i><span class="text">${msg}</span>` + (actionLabel? `<button class="action-button">${actionLabel}</button>`:'');
+    island.innerHTML = `<i class="icon ${icon}"></i><span class="text">${LLOS_Escape.escapeHtml(msg)}</span>` + (actionLabel? `<button class="action-button">${LLOS_Escape.escapeHtml(actionLabel)}</button>`:'');
     island.classList.add('show');
     if(actionLabel && actionFn){
       const btn = island.querySelector('.action-button');
@@ -187,8 +187,8 @@ const AISuggestions = (()=>{
     if(!container) return;
     const items = computeNextActions();
     container.innerHTML = items.map(i=>`
-      <div class="ai-fade-in"><i class="${i.icon}"></i><strong>Next:</strong> ${i.title}
-        <span class="ai-explainer">Why am I seeing this? ${i.reason}.</span>
+      <div class="ai-fade-in"><i class="${i.icon}"></i><strong>Next:</strong> ${LLOS_Escape.escapeHtml(i.title)}
+        <span class="ai-explainer">Why am I seeing this? ${LLOS_Escape.escapeHtml(i.reason)}.</span>
       </div>
     `).join('');
   }
@@ -198,7 +198,7 @@ const AISuggestions = (()=>{
     nodes.forEach((n, idx)=>{
       const item = list[idx%list.length];
       if(item){
-        n.innerHTML = `<i class="fa-solid fa-lightbulb"></i><strong>${item.title}</strong> — ${item.meta}
+        n.innerHTML = `<i class="fa-solid fa-lightbulb"></i><strong>${LLOS_Escape.escapeHtml(item.title)}</strong> — ${LLOS_Escape.escapeHtml(item.meta)}
         <span class="ai-explainer">Why am I seeing this? ${item.why}.</span>`;
         n.classList.add('ai-fade-in');
       }
@@ -213,8 +213,8 @@ const AISuggestions = (()=>{
     const titleEl = card.querySelector('.card-title');
     if(titleEl) titleEl.textContent = 'Personalized ideas nearby';
     const body = card.querySelector('.card-body') || card;
-    body.innerHTML += `<div class="ai-fade-in" style="margin-top:6px">${first.idea}
-    <span class="ai-explainer">Why am I seeing this? ${first.why}</span></div>`;
+    body.innerHTML += `<div class="ai-fade-in" style="margin-top:6px">${LLOS_Escape.escapeHtml(first.idea)}
+    <span class="ai-explainer">Why am I seeing this? ${LLOS_Escape.escapeHtml(first.why)}</span></div>`;
   }
 
   return { updateDashboardInsights, updatePlannerSuggestions, updateExplore }
@@ -373,7 +373,7 @@ function hookChat(){
     // user bubble
     const userWrap = document.createElement('div');
     userWrap.className = 'chat-message-wrapper user';
-    userWrap.innerHTML = `<div class="chat-bubble" style="background: var(--chat-bubble-user-bg); color:#fff">${text}</div>`;
+    userWrap.innerHTML = `<div class="chat-bubble" style="background: var(--chat-bubble-user-bg); color:#fff">${LLOS_Escape.escapeHtml(text)}</div>`;
     messagesArea.appendChild(userWrap);
     // AI bubble
     const reply = mood.mood==='negative'

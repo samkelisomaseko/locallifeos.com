@@ -36,8 +36,8 @@
             item.innerHTML = `
                 <i class="notification-icon ${notif.icon}" aria-hidden="true"></i>
                 <div class="notification-content">
-                    <div class="notification-title">${notif.title}</div>
-                    <div class="notification-text">${notif.text}</div>
+                    <div class="notification-title">${LLOS_Escape.escapeHtml(notif.title)}</div>
+                    <div class="notification-text">${LLOS_Escape.escapeHtml(notif.text)}</div>
                     <div class="notification-timestamp">${new Date(notif.timestamp).toLocaleString()}</div>
                     ${actionButtonsHtml}
                 </div>
@@ -117,15 +117,17 @@
         });
     }
     window.showPulseDetailModal = function(itemName, itemIcon, itemDescription) {
-        
-        const safeItemName = itemName.replace(/'/g, "\\'");
-        const safeItemDescription = itemDescription.replace(/'/g, "\\'");
+        // XSS hardening (feature 30): description rendered as text; name/args
+        // for the inline handlers are JS-escaped then attr-escaped (decodes
+        // back to the exact original string at click time).
+        const safeItemName = LLOS_Escape.escapeAttr(LLOS_Escape.escapeJsSingle(itemName));
+        const safeItemDescription = LLOS_Escape.escapeAttr(LLOS_Escape.escapeJsSingle(itemDescription));
 
         let modalBodyHtml = `
             <div class="text-center mb-3">
                 <i class="${itemIcon} fa-3x" style="color: var(--primary-accent);"></i>
             </div>
-            <p>${itemDescription}</p>
+            <p>${LLOS_Escape.escapeHtml(itemDescription)}</p>
             <p class="mt-2 card-subtitle" style="font-size:0.8rem;">AI can provide related events, directions, or allow sharing from here.</p>
             <div class="mt-3" style="display:flex; gap:var(--space-sm);">
                 <button class="button" style="flex:1;" onclick="getDirections('${safeItemName}')"><i class="fas fa-directions"></i> Get Directions</button>
@@ -172,7 +174,7 @@
                 const tasksOnDay = tasks.filter(t => t.dueDate === thisDateString);
                 if (tasksOnDay.length > 0) {
                     tasksOnDay.slice(0, 2).forEach(task => {
-                        contentHtml += `<div class="task-indicator" style="background-color: var(--${{work:'moss-green',health:'soft-blue',errands:'muted-terracotta'}[task.category] || 'primary-accent'}); color: white;">${task.title}</div>`;
+                        contentHtml += `<div class="task-indicator" style="background-color: var(--${{work:'moss-green',health:'soft-blue',errands:'muted-terracotta'}[task.category] || 'primary-accent'}); color: white;">${LLOS_Escape.escapeHtml(task.title)}</div>`;
                     });
                      if (tasksOnDay.length > 2) contentHtml += `<div class="task-indicator" style="background: var(--warm-gray); color: var(--text-color);">+${tasksOnDay.length - 2} more</div>`;
                 }
@@ -195,7 +197,7 @@
             const tasksOnDay = tasks.filter(t => t.dueDate === date.toISOString().split('T')[0]);
             if (tasksOnDay.length > 0) {
                 detailHtml += '<ul>';
-                tasksOnDay.forEach(task => detailHtml += `<li>${task.completed ? '✅' : '⬜'} ${task.title}</li>`);
+                tasksOnDay.forEach(task => detailHtml += `<li>${task.completed ? '✅' : '⬜'} ${LLOS_Escape.escapeHtml(task.title)}</li>`);
                 detailHtml += '</ul>';
                 foundContent = true;
             }
@@ -203,7 +205,7 @@
             const moodsOnDay = loggedMoods.filter(m => new Date(m.timestamp).toDateString() === date.toDateString());
             if(moodsOnDay.length > 0) {
                 detailHtml += '<ul>';
-                moodsOnDay.forEach(mood => detailHtml += `<li>${mood.mood} ${mood.note ? `- "${mood.note}"` : ''}</li>`);
+                moodsOnDay.forEach(mood => detailHtml += `<li>${LLOS_Escape.escapeHtml(mood.mood)} ${mood.note ? `- "${LLOS_Escape.escapeHtml(mood.note)}"` : ''}</li>`);
                 detailHtml += '</ul>';
                 foundContent = true;
             }
@@ -212,7 +214,7 @@
             detailHtml += `<p class="card-subtitle">No ${currentCalendarType} logged for this day.</p>`;
         } else if (currentCalendarType === 'moods' && foundContent) {
             const moodsOnDay = loggedMoods.filter(m => new Date(m.timestamp).toDateString() === date.toDateString());
-            detailHtml += `<p class="card-subtitle mt-2"><em>AI could analyze mood trends for this day of the week (e.g., "You tend to feel ${moodsOnDay[0].mood} on Mondays").</em></p>`;
+            detailHtml += `<p class="card-subtitle mt-2"><em>AI could analyze mood trends for this day of the week (e.g., "You tend to feel ${LLOS_Escape.escapeHtml(moodsOnDay[0].mood)} on Mondays").</em></p>`;
         }
         detailPanel.innerHTML = detailHtml;
         detailPanel.classList.remove('hidden');
@@ -237,7 +239,7 @@
             totalCompletion += completionRate;
             statsHtml += `
                 <div class="habit-stat-item">
-                    <div class="stat-title">${habit.name}</div>
+                    <div class="stat-title">${LLOS_Escape.escapeHtml(habit.name)}</div>
                     <div class="progress-bar-container">
                         <div class="progress-bar" style="width: ${completionRate}%; background-color: ${habit.color};"></div>
                     </div>
@@ -262,10 +264,10 @@
         statsBody.innerHTML = statsHtml;
         let insightText = `<i class="fas fa-brain"></i> <strong>AI Insight:</strong> `;
         if(bestStreak.streak > 5) {
-            insightText += `You have an amazing ${bestStreak.streak}-day streak on "${bestStreak.name}"! This is your strongest habit. `;
+            insightText += `You have an amazing ${bestStreak.streak}-day streak on "${LLOS_Escape.escapeHtml(bestStreak.name)}"! This is your strongest habit. `;
         }
         if (overallCompletion < 50 && habits.length > 3) {
-            insightText += `It looks like a busy day. To avoid feeling overwhelmed, maybe focus on completing just one key habit, like "${mostConsistent.name}".`;
+            insightText += `It looks like a busy day. To avoid feeling overwhelmed, maybe focus on completing just one key habit, like "${LLOS_Escape.escapeHtml(mostConsistent.name)}".`;
         } else if (overallCompletion > 80) {
             insightText += `You're on fire today! Fantastic consistency. Consider adding a new, small habit to build on this momentum.`;
         } else {
@@ -331,7 +333,7 @@
                 const itemEl = document.createElement('div');
                 itemEl.className = 'setting-item';
                 itemEl.innerHTML = `
-                    <span class="setting-label">${contact.name} <span class="text-secondary">(${contact.phone})</span></span>
+                    <span class="setting-label">${LLOS_Escape.escapeHtml(contact.name)} <span class="text-secondary">(${LLOS_Escape.escapeHtml(contact.phone)})</span></span>
                     <button class="button danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="removeTrustedContact(${contact.id})">Remove</button>
                 `;
                 listEl.appendChild(itemEl);

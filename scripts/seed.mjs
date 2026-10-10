@@ -3,8 +3,9 @@
  * Seeds demo data so first login looks identical to today's mock data.
  * Usage: node --env-file-if-exists=.env scripts/seed.mjs
  */
+import { sql } from 'drizzle-orm';
 import { getDb } from '../server/db/client.mjs';
-import { users, tasks, habits, moods, deals, places, channels, bulletins, gamification } from '../server/db/schema.js';
+import { users, tasks, habits, moods, sleep, deals, places, channels, messages, bulletins, notifications, trustedContacts, gamification, applets, integratedApps } from '../server/db/schema.js';
 import { hashPassword } from '../server/lib/crypto.mjs';
 import { eq } from 'drizzle-orm';
 
@@ -104,8 +105,10 @@ async function seed() {
     { name: 'Marketplace', description: 'Buy & sell', category: 'marketplace', memberCount: 89 },
     { name: 'Events', description: 'Local events', category: 'events', memberCount: 45 },
   ];
+  const channelIds = [];
   for (const c of demoChannels) {
-    await db.insert(channels).values({ ...c, createdAt: now, updatedAt: now });
+    const [row] = await db.insert(channels).values({ ...c, createdBy: userId, createdAt: now, updatedAt: now }).returning({ id: channels.id });
+    channelIds.push(row.id);
   }
   console.log(`[seed] Seeded ${demoChannels.length} channels`);
 
@@ -118,6 +121,68 @@ async function seed() {
     await db.insert(bulletins).values({ ...b, createdAt: now, updatedAt: now });
   }
   console.log(`[seed] Seeded ${demoBulletins.length} bulletins`);
+
+  // ── Sleep ─────────────────────────────────────────────────────
+  const demoSleep = [
+    { date: '2026-10-06', hours: 7, quality: 'good', notes: 'Slept well' },
+    { date: '2026-10-07', hours: 6, quality: 'fair', notes: 'Late night' },
+  ];
+  for (const s of demoSleep) {
+    await db.insert(sleep).values({ ...s, userId, createdAt: now, updatedAt: now });
+  }
+  console.log(`[seed] Seeded ${demoSleep.length} sleep rows`);
+
+  // ── Messages (needs a channel id) ───────────────────────────────
+  const demoMessages = [
+    { channelId: channelIds[0], content: 'Welcome to General!' },
+    { channelId: channelIds[0], content: 'Cleanup day this Saturday 🎉' },
+    { channelId: channelIds[1], content: 'Selling a bike, DM me' },
+  ];
+  for (const m of demoMessages) {
+    await db.insert(messages).values({ ...m, userId, createdAt: now, updatedAt: now });
+  }
+  console.log(`[seed] Seeded ${demoMessages.length} messages`);
+
+  // ── Notifications ───────────────────────────────────────────────
+  const demoNotifications = [
+    { type: 'community', title: 'Welcome!', message: 'Welcome to LocalLife OS' },
+    { type: 'task', title: 'Task reminder', message: 'Buy groceries is due soon' },
+    { type: 'deal', title: 'New deal nearby', message: 'Sisi Kitchen: 20% off lunch' },
+  ];
+  for (const n of demoNotifications) {
+    await db.insert(notifications).values({ ...n, userId, createdAt: now, updatedAt: now });
+  }
+  console.log(`[seed] Seeded ${demoNotifications.length} notifications`);
+
+  // ── Trusted contacts ────────────────────────────────────────────
+  const demoContacts = [
+    { name: 'Ama Serwaa', phone: '+233240000001', relationship: 'Sister' },
+    { name: 'Kwame Mensah', phone: '+233240000002', relationship: 'Friend' },
+  ];
+  for (const c of demoContacts) {
+    await db.insert(trustedContacts).values({ ...c, userId, createdAt: now, updatedAt: now });
+  }
+  console.log(`[seed] Seeded ${demoContacts.length} trusted contacts`);
+
+  // ── Applets ─────────────────────────────────────────────────────
+  const demoApplets = [
+    { name: 'Morning briefing', description: 'Weather + tasks summary', enabled: true },
+    { name: 'Deal alerts', description: 'Notify on nearby deals', enabled: true },
+  ];
+  for (const a of demoApplets) {
+    await db.insert(applets).values({ ...a, userId, createdAt: now, updatedAt: now });
+  }
+  console.log(`[seed] Seeded ${demoApplets.length} applets`);
+
+  // ── Integrated apps ─────────────────────────────────────────────
+  const demoApps = [
+    { appName: 'Google Calendar', connected: true },
+    { appName: 'Spotify', connected: false },
+  ];
+  for (const a of demoApps) {
+    await db.insert(integratedApps).values({ ...a, userId, createdAt: now, updatedAt: now });
+  }
+  console.log(`[seed] Seeded ${demoApps.length} integrated apps`);
 
   // ── Gamification ──────────────────────────────────────────────
   await db.insert(gamification).values({
@@ -133,9 +198,6 @@ async function seed() {
 
   console.log('[seed] Demo data seeded successfully.');
 }
-
-// Need sql import for count
-import { sql } from 'drizzle-orm';
 
 seed().catch(err => {
   console.error('[seed] Error:', err.message);

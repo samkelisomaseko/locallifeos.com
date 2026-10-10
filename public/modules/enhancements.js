@@ -8,7 +8,7 @@
  */
 // ===== LocalLife OS 15 — Pro Aligned Enhancements =====
 (function(){
-  const LS = localStorage;
+  const LS = window.LLOS_Cache;
   const toast = (m)=>{ let x=document.getElementById("dynamicIslandAlert"); if(!x){x=document.createElement("div");x.id="dynamicIslandAlert";x.innerHTML='<i class="icon fa fa-circle-info"></i><div class="text"></div>';document.body.appendChild(x);} x.querySelector(".text").textContent=m; x.classList.add("show"); setTimeout(()=>x.classList.remove("show"),2200); };
 
   // Viewport-safe context menu
@@ -412,15 +412,15 @@
       const filtered = items.filter(s=> (!cat.value || s.category===cat.value) && (s.title.toLowerCase().includes(q)||s.name.toLowerCase().includes(q)));
       const sorted = filtered.sort((a,b)=> sort.value==="price" ? a.price-b.price : sort.value==="new" ? b.jobs-a.jobs : b.rating-a.rating);
       list.innerHTML = sorted.map(s=>`
-        <div class="bulletin-card" data-id="${s.id}">
+        <div class="bulletin-card" data-id="${LLOS_Escape.escapeAttr(s.id)}">
           <div style="display:flex; gap:.6rem; align-items:center;">
-            <div class="tag">${s.category}</div>
-            <strong style="flex:1">${s.title}</strong>
+            <div class="tag">${LLOS_Escape.escapeHtml(s.category)}</div>
+            <strong style="flex:1">${LLOS_Escape.escapeHtml(s.title)}</strong>
             <span class="tag"><i class="fa fa-star"></i> ${s.rating}</span>
             <span class="tag">E${s.price}/hr</span>
             <button class="button" data-act="book">Book</button>
           </div>
-          <div class="card-subtitle">by ${s.name} • ${s.jobs} jobs</div>
+          <div class="card-subtitle">by ${LLOS_Escape.escapeHtml(s.name)} • ${s.jobs} jobs</div>
         </div>`).join("");
     }
     ["input","change"].forEach(ev=>{ search.addEventListener(ev,render); cat.addEventListener(ev,render); sort.addEventListener(ev,render); });
@@ -433,7 +433,7 @@
       const sheet = document.createElement("div");
       sheet.className = "modal-sheet";
       sheet.innerHTML = `<div class="sheet">
-        <div class="card-title">Book ${s.title}</div>
+        <div class="card-title">Book ${LLOS_Escape.escapeHtml(s.title)}</div>
         <div class="input-group"><input class="input-field" id="bkName" placeholder="Your name"></div>
         <div class="input-group"><input class="input-field" id="bkDate" type="datetime-local"></div>
         <div class="input-group"><textarea class="input-field" id="bkNotes" rows="3" placeholder="Notes"></textarea></div>
@@ -467,9 +467,9 @@
       body.innerHTML = `
         <header><div><strong>LocalLife Services</strong><div class="branding">Booking Receipt</div></div><div>${dt}</div></header>
         <table class="items"><tr><th>Service</th><th>Provider</th><th>When</th><th>Total</th></tr>
-        <tr><td>${title}</td><td>${provider}</td><td>${when||'-'}</td><td>E${price}</td></tr></table>
+        <tr><td>${LLOS_Escape.escapeHtml(title)}</td><td>${LLOS_Escape.escapeHtml(provider)}</td><td>${LLOS_Escape.escapeHtml(when||'-')}</td><td>E${price}</td></tr></table>
         <div class="totals"><div><strong>Grand Total: E${price}</strong></div>
-        <div class="branding">Receipt #${id.slice(0,8)}</div></div>`;
+        <div class="branding">Receipt #${LLOS_Escape.escapeHtml(String(id).slice(0,8))}</div></div>`;
       m.style.display="flex";
     }
   })();
@@ -503,14 +503,14 @@
       const q = (search.value||"").toLowerCase();
       const filtered = items.filter(a=> (!filter.value || a.type===filter.value) && a.title.toLowerCase().includes(q));
       list.innerHTML = filtered.map(a=>`
-        <div class="bulletin-card" data-id="${a.id}">
+        <div class="bulletin-card" data-id="${LLOS_Escape.escapeAttr(a.id)}">
           <div style="display:flex; gap:.6rem; align-items:center;">
-            <div class="tag">${a.type}</div>
-            <strong style="flex:1">${a.title}</strong>
+            <div class="tag">${LLOS_Escape.escapeHtml(a.type)}</div>
+            <strong style="flex:1">${LLOS_Escape.escapeHtml(a.title)}</strong>
             <span class="tag"><i class="fa fa-users"></i> ${a.participants}</span>
             <button class="button" data-act="open">Open</button>
           </div>
-          <div class="card-subtitle">${a.org} • ${a.when}</div>
+          <div class="card-subtitle">${LLOS_Escape.escapeHtml(a.org)} • ${LLOS_Escape.escapeHtml(a.when)}</div>
         </div>`).join("");
     }
     list.addEventListener("click", async (e)=>{
@@ -521,8 +521,8 @@
       const sheet = document.createElement("div");
       sheet.className = "modal-sheet";
       sheet.innerHTML = `<div class="sheet">
-        <div class="card-title">${a.title}</div>
-        <p class="card-subtitle">Type: ${a.type} • When: ${a.when} • By: ${a.org}</p>
+        <div class="card-title">${LLOS_Escape.escapeHtml(a.title)}</div>
+        <p class="card-subtitle">Type: ${LLOS_Escape.escapeHtml(a.type)} • When: ${LLOS_Escape.escapeHtml(a.when)} • By: ${LLOS_Escape.escapeHtml(a.org)}</p>
         <div class="focus-controls"><button class="button" id="join">Join</button><button class="button-secondary" id="share">Share</button></div>
       </div>`;
       document.body.appendChild(sheet);
@@ -638,8 +638,8 @@
       DB_PRO.getAll("goals").then(gs=>{
         const list = holder.querySelector("#goalsList");
         list.innerHTML = gs.map(g=>`
-          <div class="bulletin-card" data-id="${g.id}">
-            <strong>${g.title}</strong>
+          <div class="bulletin-card" data-id="${LLOS_Escape.escapeAttr(g.id)}">
+            <strong>${LLOS_Escape.escapeHtml(g.title)}</strong>
             <div class="card-subtitle">Progress: ${g.progress}/${g.target} • Horizon: ${g.horizonDays} days</div>
             <div class="focus-controls">
               <button class="button-secondary" data-inc="1">+1</button>
@@ -697,10 +697,10 @@
       DB_PRO.getAll("posts").then(items=>{
         const grid = document.getElementById("bulletinGrid");
         grid.innerHTML = (items||[]).map(p=>`
-          <article class="bulletin-card" data-id="${p.id}" data-owner="1">
-            <strong>${p.title}</strong>
-            <div class="card-subtitle">${p.category} • <span class="sensitive">${p.author||"You"}</span> • ${new Date(p.at).toLocaleString()}</div>
-            <p>${p.content}</p>
+          <article class="bulletin-card" data-id="${LLOS_Escape.escapeAttr(p.id)}" data-owner="1">
+            <strong>${LLOS_Escape.escapeHtml(p.title)}</strong>
+            <div class="card-subtitle">${LLOS_Escape.escapeHtml(p.category)} • <span class="sensitive">${LLOS_Escape.escapeHtml(p.author||"You")}</span> • ${new Date(p.at).toLocaleString()}</div>
+            <p>${LLOS_Escape.escapeHtml(p.content)}</p>
           </article>`).join("");
       });
     }
@@ -734,8 +734,8 @@
       const p = items.find(x=> x.id===id); if(!p) return;
       const sheet = document.createElement("div"); sheet.className="modal-sheet";
       sheet.innerHTML = `<div class="sheet"><div class="card-title">Edit Post</div>
-        <div class="input-group"><input class="input-field" id="epTitle" value="${p.title}"></div>
-        <div class="input-group"><textarea class="input-field" id="epContent" rows="4">${p.content}</textarea></div>
+        <div class="input-group"><input class="input-field" id="epTitle" value="${LLOS_Escape.escapeAttr(p.title)}"></div>
+        <div class="input-group"><textarea class="input-field" id="epContent" rows="4">${LLOS_Escape.escapeHtml(p.content)}</textarea></div>
         <div class="focus-controls"><button class="button" id="save">Save</button></div></div>`;
       document.body.appendChild(sheet);
       sheet.addEventListener("click",(e)=>{ if(e.target===sheet) sheet.remove(); });
@@ -783,9 +783,9 @@
     }
     function setSandbox(on){
       document.body.classList.toggle("privacy-sandbox", !!on);
-      LS.setItem("privacy-sandbox", on?"1":"0");
+      LS.rawSet("privacy-sandbox", on?"1":"0");
     }
-    setSandbox(LS.getItem("privacy-sandbox")==="1");
+    setSandbox(LS.rawGet("privacy-sandbox")==="1");
     c.addEventListener("click", (e)=>{
       if(e.target.closest(".toggle-switch-button")){
         const sw = e.target.closest(".toggle-switch-button").querySelector(".toggle-switch");

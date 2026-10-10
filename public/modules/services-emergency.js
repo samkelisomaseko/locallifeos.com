@@ -205,8 +205,8 @@
             itemEl.setAttribute('tabindex', '0');
             itemEl.innerHTML = `
                 <div style="display:flex; align-items:center; gap:var(--space-sm);">
-                    <img src="${user.avatarUrl}" alt="${user.name}" style="width:32px; height:32px; border-radius:50%;">
-                    <span class="setting-label">${user.name}</span>
+                    <img src="${LLOS_Escape.safeMediaUrl(user.avatarUrl)}" alt="${LLOS_Escape.escapeAttr(user.name)}" style="width:32px; height:32px; border-radius:50%;">
+                    <span class="setting-label">${LLOS_Escape.escapeHtml(user.name)}</span>
                 </div>
                 <i class="fas fa-chevron-right"></i>`;
             itemEl.onclick = () => {
@@ -228,7 +228,7 @@
     function updateUserAccount() {
         const newEmail = document.getElementById('profileEmailInput').value;
         const newPassword = document.getElementById('profilePasswordInput').value;
-        localStorage.setItem('userEmail', newEmail);
+        LLOS_Cache.rawSet('userEmail', newEmail);
         if (newPassword) {
             showToast("Password updated successfully.", "success");
         } else {
@@ -300,7 +300,7 @@
         const pickup = document.getElementById('ride-pickup').value;
         const dest = document.getElementById('ride-destination').value;
         const contentEl = document.getElementById('rideShareContent');
-        contentEl.innerHTML = `<p class="card-subtitle text-center"><i class="fas fa-spinner fa-spin"></i> Finding rides from ${pickup} to ${dest}...</p>`;
+        contentEl.innerHTML = `<p class="card-subtitle text-center"><i class="fas fa-spinner fa-spin"></i> Finding rides from ${LLOS_Escape.escapeHtml(pickup)} to ${LLOS_Escape.escapeHtml(dest)}...</p>`;
         setTimeout(() => {
             contentEl.innerHTML = `
                 <h4 class="card-title">Available Rides</h4>
@@ -318,18 +318,18 @@
     }
 
     function toggleAppLock(button) {
-        const isEnabled = !!localStorage.getItem('appPin');
+        const isEnabled = !!LLOS_Cache.rawGet('appPin');
         if (isEnabled) {
             openPinPrompt("disable app lock", (pin) => {
-                localStorage.removeItem('appPin');
-                localStorage.setItem('appLockEnabled', 'false');
+                LLOS_Cache.rawRemove('appPin');
+                LLOS_Cache.rawSet('appLockEnabled', 'false');
                 button.querySelector('.toggle-switch').classList.remove('active');
                 showToast("App Lock disabled.", "info");
             });
         } else {
             openSetPinModal("set", (pin) => {
-                localStorage.setItem('appPin', CryptoJS.SHA256(pin).toString());
-                localStorage.setItem('appLockEnabled', 'true');
+                LLOS_Cache.rawSet('appPin', CryptoJS.SHA256(pin).toString());
+                LLOS_Cache.rawSet('appLockEnabled', 'true');
                 button.querySelector('.toggle-switch').classList.add('active');
                 showToast("App Lock PIN set and enabled.", "success");
             });
@@ -385,7 +385,7 @@
     }
 
     function verifyPin() {
-        const storedPinHash = localStorage.getItem('appPin');
+        const storedPinHash = LLOS_Cache.rawGet('appPin');
         if (storedPinHash && CryptoJS.SHA256(currentPinInput).toString() === storedPinHash) {
             isAppLocked = false;
             lockScreen.classList.add('hidden');
