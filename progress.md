@@ -22,6 +22,9 @@
   honors #toastNotification/.show/.ai-info-toast contract, textContent-only,
   silent no-op without DOM, extra args ignored) +1 script tag; 9/9 vm-sandbox
   tests. Full suite now **131 pass, 0 fail, 3 skip** + build clean.
+- **PWA icons DONE**: placeholder icon-192/512.png generated (pure-Node PNG,
+  brand teal + white disc, IHDR-verified exact sizes) — installability unblocked;
+  replace with final brand art when available. In dist/ via build.
 
 ### Completed (new this session — PHASE 5 BATCH A: infra)
 - **Docker**: multi-stage `Dockerfile` (build → slim runtime, healthcheck on

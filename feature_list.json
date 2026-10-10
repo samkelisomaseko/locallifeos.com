@@ -461,7 +461,7 @@
     "steps": [
       "vite build emits manifest.json, sw.js, sw-register.js into dist/",
       "node --check clean on sw.js + sw-register.js",
-      "Follow-up: add icon-192.png + icon-512.png for installability"
+      "Placeholder icon-192/512.png generated (IHDR-verified); swap in final brand art later"
     ],
     "passes": true,
     "priority": "medium",
