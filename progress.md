@@ -18,6 +18,10 @@
   path throws ReferenceError (pre-existing, needs design, not fixed here).
 - Git normalized: mixed staged/unstaged resolved, safety stash dropped after
   backup ref, checkpoint committed.
+- **Feature 34 showToast DONE + verified**: `public/lib/toast.js` (classic script,
+  honors #toastNotification/.show/.ai-info-toast contract, textContent-only,
+  silent no-op without DOM, extra args ignored) +1 script tag; 9/9 vm-sandbox
+  tests. Full suite now **131 pass, 0 fail, 3 skip** + build clean.
 
 ### Completed (new this session — PHASE 5 BATCH A: infra)
 - **Docker**: multi-stage `Dockerfile` (build → slim runtime, healthcheck on

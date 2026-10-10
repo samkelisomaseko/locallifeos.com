@@ -488,11 +488,11 @@
     "category": "frontend",
     "description": "Define global showToast (called ~190x, currently undefined — any toast path throws)",
     "steps": [
-      "Define showToast(msg, type) matching call-site signatures",
-      "Verify toast renders via existing toast DOM/CSS with zero visual change",
-      "Full unit suite stays green"
+      "public/lib/toast.js honors #toastNotification/.show/.ai-info-toast contract",
+      "toast.test.mjs 9/9: text, variant class, inert markup, timer hide, no-op without DOM",
+      "Full suite 131 pass, 0 fail; vite build clean"
     ],
-    "passes": false,
+    "passes": true,
     "priority": "high",
     "assigned_workstream": "frontend",
     "verification_method": "unit_tests"
