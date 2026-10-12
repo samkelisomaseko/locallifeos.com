@@ -93,6 +93,19 @@ export async function buildApp(opts = {}) {
   // ── Phase 4A: REST-first realtime foundations for chat ────────────
   await app.register(chatRealtimePlugin);
 
+  // ── Phase 4B: WS live gateway (optional; graceful skip without dep) ──
+  // Registered ONLY when @fastify/websocket resolves so inject tests and
+  // DB-less boots never break when the dependency/network is unavailable.
+  try {
+    const { createRequire } = await import('node:module');
+    const require = createRequire(import.meta.url);
+    require.resolve('@fastify/websocket');
+    const { default: chatGatewayPlugin } = await import('./plugins/chat-gateway.mjs');
+    await app.register(chatGatewayPlugin);
+  } catch {
+    app.log.warn('WS live gateway skipped (@fastify/websocket unavailable)');
+  }
+
   // ── Phase 4B: User AI proxy (always answers; heuristic fallback) ──────
   await app.register(aiProxyPlugin);
 
