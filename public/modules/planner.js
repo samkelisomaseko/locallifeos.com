@@ -417,7 +417,14 @@
         openGenericModal("AI Proposed Schedule", modalBody);
     }
     window.applyAISchedule = function(taskIdsJson) {
-        const taskIdsToUpdate = JSON.parse(taskIdsJson);
+        let taskIdsToUpdate;
+        try {
+            taskIdsToUpdate = JSON.parse(taskIdsJson);
+            if (!Array.isArray(taskIdsToUpdate)) throw new Error('bad payload');
+        } catch (e) {
+            showToast('Could not apply schedule — please try again.', 'error');
+            return;
+        }
         let currentTime = 9;
         taskIdsToUpdate.forEach(id => {
             const task = tasks.find(t => t.id === id);
@@ -435,3 +442,24 @@
         showToast('AI schedule applied to your tasks!', 'success');
         saveTasksToLocalStorage();
     }
+    // ── Live server read-refresh (Phase 3/4, degrade-open) ──────────────
+    // Background GET /api/v1/tasks merged LWW into the local array; writes
+    // unchanged. Offline/unreachable: no-op, render code identical.
+    (function initPlannerLiveRefresh() {
+        var live = null;
+        try { live = (typeof window !== 'undefined' && window.LLOS_Live) || null; } catch (e) { live = null; }
+        if (!live) return;
+        function refreshTasksFromServer() {
+            var local = null;
+            try { local = (typeof tasks !== 'undefined') ? tasks : null; } catch (e) { return; }
+            if (!local) return;
+            live.refreshCollection('tasks', local).then(function (res) {
+                if (res && res.changed) { try { renderTasks(); } catch (e) {} }
+            }).catch(function () {});
+        }
+        try {
+            window.addEventListener('online', refreshTasksFromServer);
+            if (document.readyState !== 'loading') refreshTasksFromServer();
+            else document.addEventListener('DOMContentLoaded', refreshTasksFromServer);
+        } catch (e) {}
+    })();

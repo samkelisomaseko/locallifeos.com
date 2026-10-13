@@ -237,11 +237,14 @@
   ensurePrivacyUI();
 
   // ---------- Goals visibility (robust) ----------
+  // NOTE: the old fuzzy fallback ([...querySelectorAll("section,div")].find(...))
+  // matched app-shell ancestors (e.g. .app-container) whose inner <ul> happened
+  // to be empty, hiding the entire app with inline display:none. Only exact
+  // selectors are used now; with no #goalsHolder in the DOM this is a no-op.
   function tuneGoalsVisibility(){
     const holders = [
       document.querySelector("#planner #goalsHolder"),
-      document.querySelector("#goalsHolder"),
-      [...document.querySelectorAll("section,div")].find(s=>/your goals/i.test(s?.textContent||""))
+      document.querySelector("#goalsHolder")
     ].filter(Boolean);
     holders.forEach(holder=>{
       const list = holder.querySelector("#goalsList, ul, .list");

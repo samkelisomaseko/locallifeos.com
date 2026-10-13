@@ -33,133 +33,137 @@ function $(id) { return document.getElementById(id); }
 function show(id) { $(id)?.classList.add('active'); }
 function hide(id) { $(id)?.classList.remove('active'); }
 
-let currentView = 'auth';
-function navigate(view) {
-  if (view === currentView) return;
-  const views = ['auth', 'login', 'signup', 'forgot', 'dashboard', 'profile', 'settings'];
-  views.forEach(v => hide(`view-${v}`));
-  show(`view-${view}`);
-  currentView = view;
+// ── Modal helpers (global; the markup calls these, nothing defines them)
+function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+window.openModal = openModal;
+window.closeModal = closeModal;
+function openForgotPasswordModal() { openModal('forgotPasswordModal'); }
+window.openForgotPasswordModal = openForgotPasswordModal;
+
+// ── Screen switching (real DOM ids: loginScreen / signupScreen / dashboard)
+// NOTE: login/logout are slow (password hashing over the network takes
+// seconds), so a late restoreSession failure must never clobber a session
+// that completed after it started. window.__llos_authed guards that race.
+function showLoginScreen() {
+  if (window.__llos_authed) return;
+  document.querySelector('.app-container')?.classList.add('hidden');
+  const auth = $('authContainer');
+  if (auth) auth.style.display = '';
+  $('signupScreen')?.classList.remove('active');
+  $('loginScreen')?.classList.add('active');
 }
+function showSignupScreen() {
+  document.querySelector('.app-container')?.classList.add('hidden');
+  const auth = $('authContainer');
+  if (auth) auth.style.display = '';
+  $('loginScreen')?.classList.remove('active');
+  $('signupScreen')?.classList.add('active');
+}
+function enterApp() {
+  window.__llos_authed = true;
+  const auth = $('authContainer');
+  if (auth) auth.style.display = 'none';
+  const app = document.querySelector('.app-container');
+  if (app) { app.classList.remove('hidden'); app.style.display = ''; }
+}
+window.showLoginScreen = showLoginScreen;
+window.showSignupScreen = showSignupScreen;
 
 // ── Session restore (check real API) ─────────────────────────────
 async function restoreSession() {
   try {
-    const { user } = await apiFetch('/api/v1/auth/me');
-    hide('auth-login');
-    show('auth-dashboard');
-    $('user-email').textContent = user.email;
-    $('user-role').textContent = user.role;
-    show('auth-role');
+    await apiFetch('/api/v1/auth/me');
+    enterApp();
   } catch {
-    hide('auth-dashboard');
-    hide('auth-role');
-    show('auth-login');
+    showLoginScreen();
   }
 }
 
-// ── Login ────────────────────────────────────────────────────────
-$('login-btn').addEventListener('click', async () => {
-  const email = $('login-email').value.trim();
-  const password = $('login-password').value;
-
+// ── Login (called by the Login button: handleLoginAttempt()) ─────
+async function handleLoginAttempt() {
+  const emailEl = $('loginEmail');
+  const passEl = $('loginPassword');
+  const email = emailEl?.value.trim() ?? '';
+  const password = passEl?.value ?? '';
   if (!email || !password) {
-    setAlert('login-alert', 'Please enter both email and password.', 'error');
+    showToast('Please enter both email and password.', 'error');
     return;
   }
-
-  $('login-btn').disabled = true;
   try {
-    const { user } = await apiFetch('/api/v1/auth/login', {
+    await apiFetch('/api/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    hide('auth-login');
-    show('auth-dashboard');
-    $('user-email').textContent = user.email;
-    $('user-role').textContent = user.role;
-    show('auth-role');
-    setAlert('login-alert', '', 'success');
+    enterApp();
+    if (passEl) passEl.value = '';
   } catch (err) {
-    setAlert('login-alert', err.message, 'error');
-  } finally {
-    $('login-btn').disabled = false;
+    showToast(err.message, 'error');
   }
+}
+window.handleLoginAttempt = handleLoginAttempt;
+$('loginPassword')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleLoginAttempt();
 });
 
-$('login-password').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') $('login-btn').click();
-});
-
-// ── Signup ───────────────────────────────────────────────────────
-$('signup-btn').addEventListener('click', async () => {
-  const name = $('signup-name').value.trim();
-  const email = $('signup-email').value.trim();
-  const password = $('signup-password').value;
-
+// ── Signup (called by the Sign Up button: handleSignupAttempt()) ──
+async function handleSignupAttempt() {
+  const name = $('signupName')?.value.trim() ?? '';
+  const email = $('signupEmail')?.value.trim() ?? '';
+  const password = $('signupPassword')?.value ?? '';
+  const confirm = $('signupConfirmPassword')?.value ?? '';
   if (!name || !email || !password) {
-    setAlert('signup-alert', 'Please fill in all fields.', 'error');
+    showToast('Please fill in all fields.', 'error');
     return;
   }
   if (password.length < 8) {
-    setAlert('signup-alert', 'Password must be at least 8 characters.', 'error');
+    showToast('Password must be at least 8 characters.', 'error');
     return;
   }
-
-  $('signup-btn').disabled = true;
+  if (password !== confirm) {
+    showToast('Passwords do not match.', 'error');
+    return;
+  }
   try {
     await apiFetch('/api/v1/auth/signup', {
       method: 'POST',
       body: JSON.stringify({ name, email, password }),
     });
-    setAlert('signup-alert', 'Account created! You can now log in.', 'success');
-    setTimeout(() => navigate('login'), 1200);
+    showToast('Account created — welcome in!', 'success');
+    enterApp();
   } catch (err) {
-    setAlert('signup-alert', err.message, 'error');
-  } finally {
-    $('signup-btn').disabled = false;
+    showToast(err.message, 'error');
   }
-});
+}
+window.handleSignupAttempt = handleSignupAttempt;
 
-// ── Logout ───────────────────────────────────────────────────────
-$('logout-btn').addEventListener('click', async () => {
-  await apiFetch('/api/v1/auth/logout', { method: 'POST' }).catch(() => {});
-  hide('auth-dashboard');
-  hide('auth-role');
-  show('auth-login');
-  $('login-email').value = '';
-  $('login-password').value = '';
-});
-
-// ── Forgot password ──────────────────────────────────────────────
-$('forgot-btn').addEventListener('click', async () => {
-  const email = $('forgot-email').value.trim();
-  if (!email) {
-    setAlert('forgot-alert', 'Please enter your email.', 'error');
+// ── Forgot password (called by the modal: handlePasswordRecovery())
+async function handlePasswordRecovery() {
+  const email = $('recoveryEmail')?.value.trim() ?? '';
+  if (!email.includes('@')) {
+    showToast('Please enter a valid email address.', 'error');
     return;
   }
-  $('forgot-btn').disabled = true;
   try {
-    const result = await apiFetch('/api/v1/auth/reset-password', {
+    await apiFetch('/api/v1/auth/reset-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
     });
-    const msg = result._dev_token
-      ? `Reset successful. Your temporary password is: ${result._dev_token}`
-      : 'If an account exists with that email, a reset link has been sent.';
-    setAlert('forgot-alert', msg, 'success');
+    showToast('If an account exists for that email, it can now be recovered. Check server logs for the temporary password.', 'success');
+    closeModal('forgotPasswordModal');
   } catch (err) {
-    setAlert('forgot-alert', err.message, 'error');
-  } finally {
-    $('forgot-btn').disabled = false;
+    showToast(err.message, 'error');
   }
-});
+}
+window.handlePasswordRecovery = handlePasswordRecovery;
 
-// ── Nav links ────────────────────────────────────────────────────
-$('nav-profile')?.addEventListener('click', () => navigate('profile'));
-$('nav-settings')?.addEventListener('click', () => navigate('settings'));
-$('nav-back-profile')?.addEventListener('click', () => navigate('dashboard'));
-$('nav-back-settings')?.addEventListener('click', () => navigate('dashboard'));
+// ── Logout ───────────────────────────────────────────────────────
+async function logout() {
+  window.__llos_authed = false;
+  await apiFetch('/api/v1/auth/logout', { method: 'POST' }).catch(() => {});
+  showLoginScreen();
+}
+window.logout = logout;
 
 // ── View routing ─────────────────────────────────────────────────
 function setAlert(id, msg, type) {
