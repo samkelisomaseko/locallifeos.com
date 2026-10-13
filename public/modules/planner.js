@@ -441,7 +441,7 @@
         closeModal('genericModal');
         showToast('AI schedule applied to your tasks!', 'success');
         saveTasksToLocalStorage();
-    }
+    };
     // ── Live server read-refresh (Phase 3/4, degrade-open) ──────────────
     // Background GET /api/v1/tasks merged LWW into the local array; writes
     // unchanged. Offline/unreachable: no-op, render code identical.

@@ -59,4 +59,28 @@
     let pendingSyncQueue = [];
     let onlineStatus = navigator.onLine;
     let callTimerInterval;
+
+// ── Screen navigation (global; bottom nav + all setActiveScreen callers) ──
+// The markup and several modules call setActiveScreen(id), but no module
+// defined it — every nav click threw and no screen ever switched.
+function setActiveScreen(id) {
+    const target = document.getElementById(id);
+    if (!target) return;
+    document.querySelectorAll('.screen').forEach(function (s) {
+        s.classList.toggle('active', s === target);
+    });
+    document.querySelectorAll('.nav-item').forEach(function (n) {
+        const on = n.getAttribute('data-screen') === id;
+        n.classList.toggle('active', on);
+        n.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+}
+
+// Bottom-nav clicks route here via data-screen (idempotent if bound twice).
+document.querySelectorAll('.nav-item').forEach(function (n) {
+    n.addEventListener('click', function () {
+        const id = n.getAttribute('data-screen');
+        if (id) setActiveScreen(id);
+    });
+});
     
